@@ -15,21 +15,29 @@ export interface WalletsState {
   removeWallet: (address: string) => Promise<void>;
   refresh: () => Promise<void>;
   isLoading: boolean;
+  error: string | null;
 }
 
 export function useWallets(): WalletsState {
   const [all, setAll] = useState<string[]>([]);
   const [active, setActive] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    const [list, activeWallet] = await Promise.all([
-      getWalletList(),
-      getActiveWallet(),
-    ]);
-    setAll(list);
-    setActive(activeWallet);
-    setIsLoading(false);
+    try {
+      setError(null);
+      const [list, activeWallet] = await Promise.all([
+        getWalletList(),
+        getActiveWallet(),
+      ]);
+      setAll(list);
+      setActive(activeWallet);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load wallets');
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -37,16 +45,24 @@ export function useWallets(): WalletsState {
   }, [refresh]);
 
   const switchWallet = useCallback(async (address: string) => {
-    await setActiveWallet(address);
-    setActive(address.toLowerCase());
+    setError(null);
+    try {
+      await setActiveWallet(address);
+      setActive(address.toLowerCase());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to switch wallet');
+      throw err;
+    }
   }, []);
 
   const addWallet = useCallback(async (address: string) => {
+    setError(null);
     await addWalletToStorage(address);
     await refresh();
   }, [refresh]);
 
   const removeWallet = useCallback(async (address: string) => {
+    setError(null);
     await removeWalletFromStorage(address);
     await refresh();
   }, [refresh]);
@@ -59,5 +75,6 @@ export function useWallets(): WalletsState {
     removeWallet,
     refresh,
     isLoading,
+    error,
   };
 }

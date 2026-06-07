@@ -9,6 +9,9 @@ export { queryKeys } from './query-keys';
 export { useWallets } from './hooks/useWallets';
 export type { WalletsState } from './hooks/useWallets';
 
+export { useCreateWallet, useImportWallet, useDeleteWallet } from './hooks/useWalletMutations';
+export type { CreateWalletVariables, ImportWalletVariables } from './hooks/useWalletMutations';
+
 export { useBalance, useBalances } from './hooks/useBalance';
 export type { UseBalanceOptions, UseBalancesOptions } from './hooks/useBalance';
 

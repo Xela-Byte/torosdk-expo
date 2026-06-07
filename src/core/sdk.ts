@@ -222,6 +222,7 @@ export async function getExchangeRates(): Promise<
   Array<{ pair: string; rate: number }>
 > {
   try {
+    await authorizeOperation('exchange-rates');
     const result = await torosdk.getSupportedAssetsExchangeRates();
     if (Array.isArray(result)) return result as Array<{ pair: string; rate: number }>;
     // Result might be a record — normalize to array

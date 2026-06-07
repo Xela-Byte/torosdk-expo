@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "torosdk-expo": ["../src/react/index.ts"],
+      "torosdk-expo/core": ["../src/core/index.ts"]
+    }
+  }
+}
