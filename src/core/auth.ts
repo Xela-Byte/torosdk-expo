@@ -61,6 +61,23 @@ export function createCustomStrategy(
   };
 }
 
+// --- Global auth strategy ---
+
+let _authStrategy: AuthStrategy | null = null;
+
+export function setAuthStrategy(strategy: AuthStrategy): void {
+  _authStrategy = strategy;
+}
+
+export function getAuthStrategy(): AuthStrategy {
+  if (!_authStrategy) {
+    throw new Error(
+      '[torosdk-expo] Auth strategy not set. Call setAuthStrategy() or use ToronetProvider.'
+    );
+  }
+  return _authStrategy;
+}
+
 // --- Helpers ---
 
 function describeOperation(op: OperationCategory): string {

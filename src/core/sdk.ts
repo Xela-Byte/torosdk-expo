@@ -1,24 +1,9 @@
 import * as torosdk from 'torosdk';
 import { Currency } from 'torosdk';
 import { getPassword } from './storage';
-import type { AuthStrategy } from './auth';
+import { getAuthStrategy } from './auth';
 import type { OperationCategory } from './types';
 import { NetworkError, APIError } from './errors';
-
-let _authStrategy: AuthStrategy | null = null;
-
-export function setAuthStrategy(strategy: AuthStrategy): void {
-  _authStrategy = strategy;
-}
-
-export function getAuthStrategy(): AuthStrategy {
-  if (!_authStrategy) {
-    throw new Error(
-      '[torosdk-expo] Auth strategy not set. Call setAuthStrategy() or use ToronetProvider.'
-    );
-  }
-  return _authStrategy;
-}
 
 // --- Internal helper: resolve password for an address ---
 
