@@ -1,0 +1,50 @@
+{
+  "name": "torosdk-expo",
+  "version": "0.1.0",
+  "description": "Expo wrapper for torosdk — secure password storage, TanStack Query hooks, and CLI init",
+  "main": "dist/react/index.js",
+  "types": "dist/react/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/react/index.d.ts",
+      "default": "./dist/react/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "default": "./dist/core/index.js"
+    },
+    "./cli": "./dist/cli/init.js"
+  },
+  "files": ["dist/", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc",
+    "test": "jest --passWithNoTests",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "keywords": ["toronet", "torosdk", "expo", "react-native", "blockchain", "wallet"],
+  "license": "MIT",
+  "peerDependencies": {
+    "expo-secure-store": ">=12.0.0",
+    "expo-local-authentication": ">=14.0.0",
+    "@tanstack/react-query": ">=5.0.0",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "expo-local-authentication": { "optional": true }
+  },
+  "dependencies": {
+    "torosdk": "^0.2.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.0",
+    "@types/react": "^18.2.0",
+    "@testing-library/react-native": "^12.4.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.0",
+    "typescript": "^5.3.0",
+    "react": "^18.2.0",
+    "@tanstack/react-query": "^5.0.0"
+  }
+}
