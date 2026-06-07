@@ -1,5 +1,5 @@
 import type { ToronetConfig } from 'torosdk-expo/core';
 
 export const config: ToronetConfig = {
-  network: 'testnet',
+  network: (process.env.TOROSDK_NETWORK as 'testnet' | 'mainnet') ?? 'mainnet',
 };

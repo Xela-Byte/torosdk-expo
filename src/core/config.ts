@@ -1,5 +1,6 @@
 import { initializeSDK } from 'torosdk';
 import type { ToronetConfig, ToronetNetwork } from './types';
+import { setupAxiosAdapter } from './axios-adapter';
 
 /** Package-level config singleton — set once during app startup. */
 let _config: ToronetConfig | null = null;
@@ -33,6 +34,10 @@ const DEFAULT_API_BASE_URLS: Record<ToronetNetwork, string> = {
 export function createConfig(config: ToronetConfig): ToronetConfig {
   const apiBaseUrl =
     config.apiBaseUrl ?? DEFAULT_API_BASE_URLS[config.network];
+
+  // Patch axios BEFORE any torosdk calls so GET+body requests use
+  // fetch instead of XHR (which strips body on GET per spec).
+  setupAxiosAdapter();
 
   // Initialize the underlying torosdk so its network calls use the
   // correct API endpoint (testnet vs mainnet).

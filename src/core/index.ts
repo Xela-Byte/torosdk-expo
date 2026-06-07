@@ -46,6 +46,9 @@ export type { ToroErrorCode } from './errors';
 // Config
 export { createConfig, getConfig, getApiBaseUrl } from './config';
 
+// Axios adapter (called automatically by createConfig; exported for direct use if needed)
+export { setupAxiosAdapter } from './axios-adapter';
+
 // Storage
 export {
   getPassword,

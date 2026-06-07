@@ -57,6 +57,12 @@ export interface WalletsState {
  * ```
  */
 export function useWallets(): WalletsState {
+  // DESIGN NOTE: This hook manages state manually (useState + useCallback)
+  // rather than via TanStack Query. Wallet identity is local SecureStore
+  // state read once on mount and mutated imperatively — it is NOT
+  // server-fetched data. TanStack Query's caching, stale-while-revalidate,
+  // and retry semantics add no value for local keystore reads. The manual
+  // approach keeps the dependency footprint smaller and the bundle lighter.
   const [all, setAll] = useState<string[]>([]);
   const [active, setActive] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);

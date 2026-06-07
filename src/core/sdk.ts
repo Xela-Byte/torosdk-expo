@@ -47,9 +47,11 @@ async function resolvePassword(
  * Normalize an unknown error into a {@link ToroError} subclass.
  *
  * @remarks
- * Detects network failures (string matching), axios-style response errors
- * (status + data), and falls back to {@link NetworkError} for unrecognized
- * throwables.
+ * torosdk uses native `fetch` under the hood. This wrapper first checks for
+ * transport-level failures (network down, timeout, DNS failure), then looks for
+ * application-level HTTP errors (4xx/5xx) by inspecting `status`/`statusCode`
+ * properties and falling back to pattern-matching the error message. Anything
+ * that cannot be classified is wrapped as a {@link NetworkError}.
  *
  * @param err - The original caught error.
  * @throws {@link NetworkError} | {@link APIError} — always throws, never returns.
@@ -57,18 +59,30 @@ async function resolvePassword(
 function wrapError(err: unknown): never {
   if (err instanceof Error) {
     const msg = err.message;
-    if (msg.includes('Network Error') || msg.includes('timeout')) {
+
+    // Transport-level failures (fetch throws TypeError for these)
+    if (
+      msg.includes('Network') ||
+      msg.includes('fetch') ||
+      msg.includes('timeout') ||
+      msg.includes('AbortError')
+    ) {
       throw new NetworkError(msg, err);
     }
-    // axios errors often have a response property
-    const axiosErr = err as { response?: { status?: number; data?: unknown } };
-    if (axiosErr.response) {
-      throw new APIError(
-        msg,
-        axiosErr.response.status,
-        axiosErr.response.data
-      );
+
+    // Check for status/statusCode properties (common in fetch wrappers)
+    const withStatus = err as { status?: number; statusCode?: number; data?: unknown };
+    const status = withStatus.status ?? withStatus.statusCode;
+    if (typeof status === 'number' && status >= 400) {
+      throw new APIError(msg, status, withStatus.data ?? err);
     }
+
+    // Try to extract an HTTP status from the message (e.g. "HTTP 400", "status 503")
+    const statusMatch = msg.match(/\b(4\d\d|5\d\d)\b/);
+    if (statusMatch) {
+      throw new APIError(msg, parseInt(statusMatch[1], 10), err);
+    }
+
     throw new NetworkError(msg, err);
   }
   throw new NetworkError(String(err), err);
@@ -352,6 +366,7 @@ export async function submitKYC(
 ): Promise<unknown> {
   try {
     const pwd = await resolvePassword(address, 'kyc');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- torosdk parameter type is opaque; Record<string, unknown> cannot satisfy it without a cast
     const result = await torosdk.performKYCForCustomer({ address, ...customerData, password: pwd } as any);
     return result;
   } catch (err) {

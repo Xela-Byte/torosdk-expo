@@ -4,7 +4,6 @@ import {
   importWallet as importWalletCore,
 } from '../../core/sdk';
 import {
-  setPassword,
   addWalletToList,
   setActiveWallet,
   deletePassword,
@@ -51,8 +50,9 @@ export function useCreateWallet() {
   return useMutation({
     mutationFn: async ({ username, password }: CreateWalletVariables) => {
       await getAuthStrategy().authorize('wallet-create');
+      // createWalletCore already persists the password via setPassword() —
+      // we only need to add the address to the wallet list and mark it active.
       const address = await createWalletCore(username, password);
-      await setPassword(address, password);
       await addWalletToList(address);
       await setActiveWallet(address);
       return address;
@@ -97,8 +97,9 @@ export function useImportWallet() {
   return useMutation({
     mutationFn: async ({ privateKey, password }: ImportWalletVariables) => {
       await getAuthStrategy().authorize('wallet-import');
+      // importWalletCore already persists the password via setPassword() —
+      // we only need to add the address to the wallet list and mark it active.
       const address = await importWalletCore(privateKey, password);
-      await setPassword(address, password);
       await addWalletToList(address);
       await setActiveWallet(address);
       return address;
