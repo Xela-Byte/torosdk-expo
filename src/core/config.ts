@@ -1,3 +1,4 @@
+import { initializeSDK } from 'torosdk';
 import type { ToronetConfig, ToronetNetwork } from './types';
 
 /** Package-level config singleton — set once during app startup. */
@@ -5,7 +6,7 @@ let _config: ToronetConfig | null = null;
 
 /** Default Toronet API endpoints for each network. */
 const DEFAULT_API_BASE_URLS: Record<ToronetNetwork, string> = {
-  testnet: 'https://api.testnet.toronet.org',
+  testnet: 'http://testnet.toronet.org',
   mainnet: 'https://api.toronet.org',
 };
 
@@ -15,6 +16,10 @@ const DEFAULT_API_BASE_URLS: Record<ToronetNetwork, string> = {
  * @remarks
  * Must be called **once** before any SDK function or hook is used.
  * {@link ToronetProvider} calls this automatically in a `useEffect` on mount.
+ *
+ * This also initialises the underlying `torosdk` package via
+ * `initializeSDK()`, passing the resolved network and base URL so
+ * that `torosdk` calls use the correct Toronet API endpoint.
  *
  * @param config - Network selection and optional API base URL override.
  * @returns The resulting {@link ToronetConfig} object (same reference passed to {@link getConfig}).
@@ -26,10 +31,17 @@ const DEFAULT_API_BASE_URLS: Record<ToronetNetwork, string> = {
  * ```
  */
 export function createConfig(config: ToronetConfig): ToronetConfig {
-  _config = {
+  const apiBaseUrl =
+    config.apiBaseUrl ?? DEFAULT_API_BASE_URLS[config.network];
+
+  // Initialize the underlying torosdk so its network calls use the
+  // correct API endpoint (testnet vs mainnet).
+  initializeSDK({
     network: config.network,
-    apiBaseUrl: config.apiBaseUrl ?? DEFAULT_API_BASE_URLS[config.network],
-  };
+    baseURL: apiBaseUrl,
+  });
+
+  _config = { network: config.network, apiBaseUrl };
   return _config;
 }
 

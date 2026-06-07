@@ -30,7 +30,8 @@
  */
 
 // Types
-export type { ToronetConfig, ToronetNetwork, OperationCategory, Currency } from './types';
+export type { ToronetConfig, ToronetNetwork, OperationCategory } from './types';
+export { Currency } from './types';
 
 // Errors
 export {

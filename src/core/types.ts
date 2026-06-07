@@ -1,7 +1,7 @@
-import type { Currency } from 'torosdk';
+import { Currency } from 'torosdk';
 
 /** Re-export the `Currency` enum from `torosdk` for convenience. */
-export type { Currency };
+export { Currency };
 
 /**
  * Supported Toronet network environments.
