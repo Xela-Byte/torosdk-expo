@@ -41,6 +41,7 @@ export default function TNSScreen() {
         />
       </View>
       {resolve.isFetching && <ActivityIndicator color="#e94560" />}
+      {resolve.isError && <Text style={styles.errorText}>{(resolve.error as Error)?.message}</Text>}
       {resolve.data && <Text style={styles.result}>{resolve.data}</Text>}
 
       {/* Lookup */}
@@ -54,6 +55,8 @@ export default function TNSScreen() {
           onChangeText={setLookupAddr}
         />
       </View>
+      {lookup.isFetching && <ActivityIndicator color="#e94560" />}
+      {lookup.isError && <Text style={styles.errorText}>{(lookup.error as Error)?.message}</Text>}
       {lookup.data && <Text style={styles.result}>{lookup.data}</Text>}
 
       {/* Register */}

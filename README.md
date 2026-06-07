@@ -124,7 +124,7 @@ npm install expo-local-authentication
 ### 1. Create config
 
 ```ts
-// src/torosdk/config.ts
+// src/torosdk/config.ts — torosdk-expo v0.1.1+, torosdk v0.2.0+
 import type { ToronetConfig } from 'torosdk-expo/core';
 
 export const config: ToronetConfig = {
@@ -136,7 +136,7 @@ export const config: ToronetConfig = {
 ### 2. Choose an auth strategy
 
 ```ts
-// src/torosdk/auth.ts
+// src/torosdk/auth.ts — torosdk-expo v0.1.1+
 import {
   createPasswordStrategy,
   createBiometricStrategy,
@@ -163,7 +163,7 @@ export const authStrategy: AuthStrategy = createPasswordStrategy();
 ### 3. Wrap with ToronetProvider
 
 ```tsx
-// App.tsx
+// App.tsx — torosdk-expo v0.1.1+
 import { ToronetProvider } from 'torosdk-expo';
 import { config } from './src/torosdk/config';
 import { authStrategy } from './src/torosdk/auth';
@@ -192,6 +192,7 @@ All hooks need `<ToronetProvider>` (or at minimum `<QueryClientProvider>`) in th
 Manages stored wallet addresses and active wallet selection.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useWallets } from 'torosdk-expo';
 
 function WalletPicker() {
@@ -230,6 +231,7 @@ Returns `WalletsState`:
 Creates a new on-chain wallet, stores the password in SecureStore, and adds it to the wallet list.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useCreateWallet } from 'torosdk-expo';
 
 const mutation = useCreateWallet();
@@ -243,6 +245,7 @@ The mutation runs the `wallet-create` auth gate, calls `torosdk.createWallet()`,
 Imports an existing wallet from a private key.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useImportWallet } from 'torosdk-expo';
 
 const mutation = useImportWallet();
@@ -254,6 +257,7 @@ const address = await mutation.mutateAsync({ privateKey: '0x...', password: 's3c
 Removes a wallet's password from SecureStore and drops the address from the wallet list. Runs the `wallet-delete` auth gate.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useDeleteWallet } from 'torosdk-expo';
 
 const mutation = useDeleteWallet();
@@ -269,6 +273,7 @@ await mutation.mutateAsync('0xaddress');
 Fetches the balance for a single currency.
 
 ```tsx
+// torosdk-expo v0.1.1+, torosdk v0.2.0+
 import { useBalance } from 'torosdk-expo';
 import { Currency } from 'torosdk';
 
@@ -290,6 +295,7 @@ Returns a TanStack Query result with `{ balance: string; currency: Currency }`.
 Fetches all 6 currencies (NGN, USD, KSH, ZAR, GBP, EUR) in parallel.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useBalances } from 'torosdk-expo';
 
 function AllBalances() {
@@ -309,6 +315,7 @@ Returns a TanStack Query result with `Array<{ balance: string; currency: Currenc
 Sends funds from one wallet to another. The biometric gate fires automatically if you configured it for `transfer`.
 
 ```tsx
+// torosdk-expo v0.1.1+, torosdk v0.2.0+
 import { useTransfer } from 'torosdk-expo';
 import { Currency } from 'torosdk';
 
@@ -344,6 +351,7 @@ On success, the sender's balance queries are invalidated automatically through T
 Resolves a TNS name to a wallet address.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useResolveTNS } from 'torosdk-expo';
 
 function LookupName({ name }: { name: string }) {
@@ -359,6 +367,7 @@ function LookupName({ name }: { name: string }) {
 Reverse lookup: finds the TNS name registered to an address.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useLookupTNS } from 'torosdk-expo';
 
 // data: string | null (null if no TNS name registered)
@@ -370,6 +379,7 @@ const { data: tnsName } = useLookupTNS('0xaddress');
 Registers a TNS name for an address. Runs the `tns-write` auth gate.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useSetTNS } from 'torosdk-expo';
 
 const mutation = useSetTNS();
@@ -387,6 +397,7 @@ On success, invalidates resolve and lookup queries for the affected name / addre
 Checks KYC verification status for an address.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useKYCStatus } from 'torosdk-expo';
 
 const { data, isLoading } = useKYCStatus({ address: '0x...' });
@@ -400,6 +411,7 @@ const { data, isLoading } = useKYCStatus({ address: '0x...' });
 Submits KYC data for an address. Runs the `kyc` auth gate.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useSubmitKYC } from 'torosdk-expo';
 
 const mutation = useSubmitKYC();
@@ -420,6 +432,7 @@ On success, invalidates the KYC status query for the address.
 Fetches live exchange rates for all supported currency pairs.
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useExchangeRates } from 'torosdk-expo';
 
 const { data, isLoading } = useExchangeRates();
@@ -448,6 +461,7 @@ Because hooks, core, and CLI are separate entry points, bundlers (Metro, Webpack
 Every error thrown by this package extends `ToroError` (exported from `torosdk-expo/core`):
 
 ```ts
+// torosdk-expo v0.1.1+
 import {
   ToroError,
   NetworkError,
@@ -467,6 +481,7 @@ import {
 All errors have `code` (a `ToroErrorCode`), `detail` (a human-readable string), and optionally `cause` (the underlying error).
 
 ```ts
+// torosdk-expo v0.1.1+
 try {
   await transfer({ ... });
 } catch (err) {
@@ -534,17 +549,18 @@ The scaffolded code works immediately — change one line in `auth.ts` to switch
 
 ## Example app
 
-The `example/` directory has a complete Expo SDK 52 app that exercises every hook:
+The `example/` directory has a complete Expo SDK 52 app that exercises every hook. See **[example/README.md](example/README.md)** for setup instructions and a detailed walkthrough.
 
 | Screen | Hooks used |
 |--------|------------|
-| `HomeScreen` | `useWallets`, `useCreateWallet`, `useImportWallet`, `useDeleteWallet` |
+| `HomeScreen` | `useWallets`, `useBalances` |
+| `CreateWalletScreen` | `useCreateWallet`, `useImportWallet`, `useDeleteWallet`, `useWallets` |
 | `TransferScreen` | `useTransfer`, `useBalance` |
 | `TNSScreen` | `useResolveTNS`, `useLookupTNS`, `useSetTNS` |
-| `KYCScreen` | `useKYCStatus`, `useSubmitKYC` |
+| `KYCScreen` | `useKYCStatus` |
 | `ExchangeRatesScreen` | `useExchangeRates` |
 
-It uses expo-router-compatible screen patterns, env-driven config, and shows error handling for each hook.
+Six screens, full loading/error/empty state handling, biometric auth configuration, and dark theme.
 
 ---
 
@@ -575,6 +591,7 @@ What's covered:
 ### Add a custom auth strategy
 
 ```ts
+// torosdk-expo v0.1.1+
 import { createCustomStrategy } from 'torosdk-expo/core';
 
 export const serverAuthStrategy = createCustomStrategy(async (operation) => {
@@ -589,6 +606,7 @@ export const serverAuthStrategy = createCustomStrategy(async (operation) => {
 Wrap it in `src/core/sdk.ts` following the existing pattern (authorize → call torosdk → wrap errors):
 
 ```ts
+// torosdk-expo v0.1.1+
 export async function getTransactionHistory(address: string): Promise<Transaction[]> {
   try {
     await authorizeOperation('balance');
@@ -605,6 +623,7 @@ export async function getTransactionHistory(address: string): Promise<Transactio
 Follow the existing pattern (query key → useQuery + SDK call):
 
 ```ts
+// torosdk-expo v0.1.1+
 import { useQuery } from '@tanstack/react-query';
 import { getTransactionHistory } from '../../core/sdk';
 import { queryKeys } from '../query-keys';

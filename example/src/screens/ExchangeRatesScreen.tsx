@@ -11,7 +11,7 @@ export default function ExchangeRatesScreen() {
   if (isLoading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#e94560" />
+        <ActivityIndicator size={36} color="#e94560" />
       </View>
     );
   }

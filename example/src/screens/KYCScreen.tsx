@@ -35,6 +35,8 @@ export default function KYCScreen() {
 
       {kyc.isLoading ? (
         <ActivityIndicator color="#e94560" style={{ marginTop: 20 }} />
+      ) : kyc.isError ? (
+        <Text style={styles.errorText}>{(kyc.error as Error)?.message}</Text>
       ) : kyc.data ? (
         <View style={styles.resultCard}>
           <View style={[
@@ -45,10 +47,10 @@ export default function KYCScreen() {
             {kyc.data.verified ? 'KYC Verified' : 'Not Verified'}
           </Text>
         </View>
-      ) : null}
-
-      {kyc.isError && (
-        <Text style={styles.errorText}>{(kyc.error as Error)?.message}</Text>
+      ) : checkAddress ? null : (
+        <Text style={styles.emptyText}>
+          Enter a wallet address above to check its KYC status
+        </Text>
       )}
 
       <Text style={styles.infoText}>
@@ -71,4 +73,5 @@ const styles = StyleSheet.create({
   statusText: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
   errorText: { color: '#e94560', marginTop: 12 },
   infoText: { color: '#666', fontSize: 13, marginTop: 24, textAlign: 'center', lineHeight: 20 },
+  emptyText: { color: '#aaa', fontSize: 14, textAlign: 'center', marginTop: 24 },
 });

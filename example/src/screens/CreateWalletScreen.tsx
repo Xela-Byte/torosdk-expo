@@ -135,7 +135,14 @@ export default function CreateWalletScreen({ navigation }: any) {
       )}
 
       {/* Existing wallets with delete */}
-      {wallets.all.length > 0 && (
+      {wallets.isLoading ? (
+        <ActivityIndicator color="#e94560" style={{ marginTop: 32 }} />
+      ) : wallets.error !== null ? (
+        <View style={styles.existingSection}>
+          <Text style={styles.sectionTitle}>Stored Wallets</Text>
+          <Text style={styles.errorText}>{wallets.error ?? 'Failed to load'}</Text>
+        </View>
+      ) : wallets.all.length > 0 && (
         <View style={styles.existingSection}>
           <Text style={styles.sectionTitle}>Stored Wallets</Text>
           {wallets.all.map((addr) => (
@@ -169,4 +176,5 @@ const styles = StyleSheet.create({
   walletRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f3460', padding: 14, borderRadius: 8, marginBottom: 8 },
   walletAddr: { color: '#fff', fontSize: 14 },
   deleteText: { color: '#e94560', fontWeight: 'bold' },
+  errorText: { color: '#e94560', marginTop: 8 },
 });

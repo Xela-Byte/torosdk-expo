@@ -7,7 +7,7 @@
     <key>CFBundleDevelopmentRegion</key>
     <string>$(DEVELOPMENT_LANGUAGE)</string>
     <key>CFBundleDisplayName</key>
-    <string>torosdk-expo-example</string>
+    <string>example</string>
     <key>CFBundleExecutable</key>
     <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleIdentifier</key>
@@ -27,7 +27,7 @@
       <dict>
         <key>CFBundleURLSchemes</key>
         <array>
-          <string>com.toroforge.torosdkexpoexample</string>
+          <string>com.xelabyte.example</string>
         </array>
       </dict>
     </array>
@@ -41,11 +41,9 @@
     <dict>
       <key>NSAllowsArbitraryLoads</key>
       <false/>
-      <key>NSAllowsLocalNetworking</key>
-      <true/>
     </dict>
     <key>NSFaceIDUsageDescription</key>
-    <string>We use Face ID to secure your wallet transactions</string>
+    <string>ToroSDK uses Face ID to authorize sensitive wallet operations like transfers, KYC checks, and TNS name registration.</string>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>

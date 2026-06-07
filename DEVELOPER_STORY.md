@@ -26,6 +26,7 @@ It also prints: `torosdk-expo ready. Next: choose an auth strategy in src/torosd
 Amara opens `auth.ts`. She wants biometric for transfers but silent password fill for balance checks. She writes:
 
 ```ts
+// Requires torosdk-expo v0.1.1+
 import { createBiometricStrategy } from 'torosdk-expo/core';
 
 export const authStrategy = createBiometricStrategy({
@@ -39,7 +40,7 @@ No custom auth code — the package ships with `createPasswordStrategy` and `cre
 Now she wraps her app:
 
 ```tsx
-// App.tsx
+// App.tsx — torosdk-expo v0.1.1+
 import { ToronetProvider } from 'torosdk-expo';
 import { config } from './torosdk/config';
 import { authStrategy } from './torosdk/auth';
@@ -58,6 +59,7 @@ The provider sets `network: 'testnet'` from her `.env` and is ready.
 **Building the onboarding screen.** Amara wants create-wallet and import-wallet flows:
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useCreateWallet, useImportWallet } from 'torosdk-expo';
 
 function OnboardingScreen() {
@@ -86,6 +88,7 @@ She never touches `expo-secure-store` directly. The mutation handles verificatio
 **Building the dashboard.** She needs balances for all six currencies:
 
 ```tsx
+// torosdk-expo v0.1.1+, torosdk v0.2.0+
 import { useBalance, useExchangeRates, useWallets } from 'torosdk-expo';
 
 function Dashboard() {
@@ -114,6 +117,7 @@ No password arguments, no manual `axios` calls, no loading boolean state. The ho
 **Sending money.** She builds a transfer screen:
 
 ```tsx
+// torosdk-expo v0.1.1+, torosdk v0.2.0+
 import { useTransfer } from 'torosdk-expo';
 
 function SendScreen() {
@@ -139,6 +143,7 @@ The biometric gate fires automatically because she listed `'transfer'` in `requi
 **TNS lookup.** She wants users to type a name instead of a hex address:
 
 ```tsx
+// torosdk-expo v0.1.1+
 import { useResolveTNS } from 'torosdk-expo';
 
 function RecipientInput() {
@@ -150,6 +155,7 @@ function RecipientInput() {
 **KYC check before large transfers:**
 
 ```tsx
+// torosdk-expo v0.1.1+
 const kyc = useKYCStatus({ address: activeWallet });
 
 if (kyc.data?.verified) {

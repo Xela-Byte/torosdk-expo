@@ -12,6 +12,26 @@ export default function HomeScreen({ navigation }: any) {
     enabled: !!wallets.active,
   });
 
+  if (wallets.isLoading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator color="#e94560" size={36} />
+        <Text style={styles.loadingText}>Loading wallet...</Text>
+      </View>
+    );
+  }
+
+  if (wallets.error !== null) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.emptyTitle}>Wallet Error</Text>
+        <Text style={styles.emptySubtitle}>
+          {wallets.error ?? 'Could not load wallets'}
+        </Text>
+      </View>
+    );
+  }
+
   if (!wallets.active) {
     return (
       <View style={styles.centered}>
@@ -114,4 +134,5 @@ const styles = StyleSheet.create({
   currencyLabel: { color: '#aaa', fontSize: 14 },
   balanceAmount: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginTop: 4 },
   errorText: { color: '#e94560', textAlign: 'center', marginTop: 20 },
+  loadingText: { color: '#aaa', marginTop: 12, fontSize: 14 },
 });

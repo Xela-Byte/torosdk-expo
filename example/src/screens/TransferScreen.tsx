@@ -53,9 +53,17 @@ export default function TransferScreen() {
       {/* Balance display */}
       <View style={styles.balanceRow}>
         <Text style={styles.balanceLabel}>Balance:</Text>
-        <Text style={styles.balanceValue}>
-          {balance.data?.balance ?? '...'} {currency}
-        </Text>
+        {balance.isLoading ? (
+          <ActivityIndicator color="#e94560" size="small" />
+        ) : balance.isError ? (
+          <Text style={styles.balanceError}>
+            {(balance.error as Error)?.message ?? 'Failed to load'}
+          </Text>
+        ) : (
+          <Text style={styles.balanceValue}>
+            {balance.data?.balance ?? '0'} {currency}
+          </Text>
+        )}
       </View>
 
       {/* Currency picker */}
@@ -123,4 +131,5 @@ const styles = StyleSheet.create({
   disabled: { opacity: 0.5 },
   sendText: { color: '#fff', fontWeight: 'bold', fontSize: 18 },
   errorText: { color: '#e94560', marginTop: 12 },
+  balanceError: { color: '#e94560', fontSize: 14 },
 });
