@@ -23,7 +23,7 @@
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
     "torosdk": "^0.2.0",
-    "torosdk-expo": "^0.1.2"
+    "torosdk-expo": "^0.1.3"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",
