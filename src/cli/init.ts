@@ -1,5 +1,34 @@
 #!/usr/bin/env node
 
+/**
+ * CLI entry point for `torosdk-expo init`.
+ *
+ * @remarks
+ * This script bootstraps a torosdk integration into an existing Expo
+ * project. It performs five sequential steps:
+ *
+ * 1. **Detect** the Expo project root via `app.json` or `app.config.*`.
+ * 2. **Determine** the package manager (npm, yarn, or pnpm).
+ * 3. **Install** the required peer dependencies: `torosdk`,
+ *    `@tanstack/react-query`, `expo-secure-store`, and
+ *    `expo-local-authentication`.
+ * 4. **Scaffold** three starter files into `src/torosdk/`:
+ *    `config.ts`, `auth.ts`, and `provider.tsx`.
+ * 5. **Append** `TOROSDK_NETWORK=testnet` to `.env.example` if the
+ *    variable is not already present.
+ *
+ * After the script finishes, the developer chooses an auth strategy,
+ * wraps their app, and can immediately begin using hooks such as
+ * {@link useBalance} and {@link useTransfer}.
+ *
+ * @example
+ * ```bash
+ * npx torosdk-expo init
+ * ```
+ *
+ * @packageDocumentation
+ */
+
 import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
@@ -7,6 +36,11 @@ import { execSync } from 'child_process';
 const TEMPLATES_DIR = path.resolve(__dirname, 'templates');
 const TARGET_DIR = 'src/torosdk';
 
+/**
+ * Run the full initialisation pipeline.
+ *
+ * Exits with code `1` if dependency installation fails.
+ */
 function main(): void {
   console.log('\n🔧 torosdk-expo init\n');
 

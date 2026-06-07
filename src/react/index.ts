@@ -1,3 +1,25 @@
+/**
+ * React integration layer for torosdk-expo.
+ *
+ * @remarks
+ * This module provides:
+ * - **Provider** — React context wrapper ({@link ToronetProvider}) that
+ *   initialises the SDK config and wraps children.
+ * - **Query keys** — Structured cache keys ({@link queryKeys}) for
+ *   `@tanstack/react-query`.
+ * - **Hooks** — Typed React hooks for wallets, balances, transfers, TNS,
+ *   KYC, and exchange rates.
+ *
+ * @example
+ * ```tsx
+ * import { ToronetProvider } from 'torosdk-expo/react';
+ * // or, if your bundler resolves subpath exports:
+ * import { ToronetProvider } from 'torosdk-expo';
+ * ```
+ *
+ * @packageDocumentation
+ */
+
 // Provider
 export { ToronetProvider, useToronetContext } from './provider';
 export type { ToronetProviderProps } from './provider';

@@ -1,12 +1,30 @@
 import type { ToronetConfig, ToronetNetwork } from './types';
 
+/** Package-level config singleton — set once during app startup. */
 let _config: ToronetConfig | null = null;
 
+/** Default Toronet API endpoints for each network. */
 const DEFAULT_API_BASE_URLS: Record<ToronetNetwork, string> = {
   testnet: 'https://api.testnet.toronet.org',
   mainnet: 'https://api.toronet.org',
 };
 
+/**
+ * Initialize the package configuration.
+ *
+ * @remarks
+ * Must be called **once** before any SDK function or hook is used.
+ * {@link ToronetProvider} calls this automatically in a `useEffect` on mount.
+ *
+ * @param config - Network selection and optional API base URL override.
+ * @returns The resulting {@link ToronetConfig} object (same reference passed to {@link getConfig}).
+ *
+ * @example
+ * ```ts
+ * import { createConfig } from 'torosdk-expo/core';
+ * createConfig({ network: 'testnet' });
+ * ```
+ */
 export function createConfig(config: ToronetConfig): ToronetConfig {
   _config = {
     network: config.network,
@@ -15,6 +33,12 @@ export function createConfig(config: ToronetConfig): ToronetConfig {
   return _config;
 }
 
+/**
+ * Retrieve the current package configuration.
+ *
+ * @throws If {@link createConfig} has not been called yet.
+ * @returns The {@link ToronetConfig} set by {@link createConfig}.
+ */
 export function getConfig(): ToronetConfig {
   if (!_config) {
     throw new Error(
@@ -24,6 +48,11 @@ export function getConfig(): ToronetConfig {
   return _config;
 }
 
+/**
+ * Resolve the Toronet API base URL from config (or the network default).
+ *
+ * @returns The fully qualified API base URL string (e.g. `"https://api.testnet.toronet.org"`).
+ */
 export function getApiBaseUrl(): string {
   return getConfig().apiBaseUrl ?? DEFAULT_API_BASE_URLS[getConfig().network];
 }
