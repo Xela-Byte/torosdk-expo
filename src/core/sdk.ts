@@ -1,18 +1,24 @@
 import * as torosdk from 'torosdk';
 import { Currency } from 'torosdk';
-import { getPassword } from './storage';
+import { getPassword, setPassword } from './storage';
 import { getAuthStrategy } from './auth';
 import type { OperationCategory } from './types';
 import { NetworkError, APIError } from './errors';
 
-// --- Internal helper: resolve password for an address ---
+// --- Internal helpers ---
 
+/** Run the auth gate for a given operation (throws if unauthorized). */
+async function authorizeOperation(operation: OperationCategory): Promise<void> {
+  const auth = getAuthStrategy();
+  await auth.authorize(operation);
+}
+
+/** Authorize, then retrieve the stored wallet password. Throws if not found. */
 async function resolvePassword(
   address: string,
   operation: OperationCategory
 ): Promise<string> {
-  const auth = getAuthStrategy();
-  await auth.authorize(operation);
+  await authorizeOperation(operation);
   const pwd = await getPassword(address);
   if (!pwd) {
     throw new Error(`[torosdk-expo] No stored password for ${address}. Import or create a wallet first.`);
@@ -49,8 +55,10 @@ export async function createWallet(
   password: string
 ): Promise<string> {
   try {
-    const result = await torosdk.createWallet({ username, password });
-    return result;
+    const address = await torosdk.createWallet({ username, password });
+    // Persist the password so subsequent operations (transfer, TNS, KYC) work.
+    await setPassword(address, password);
+    return address;
   } catch (err) {
     wrapError(err);
   }
@@ -61,8 +69,11 @@ export async function importWallet(
   password: string
 ): Promise<string> {
   try {
-    const result = await torosdk.importWalletFromPrivateKeyAndPassword({ pvKey: privateKey, password });
-    return typeof result === 'string' ? result : (result as { address: string }).address;
+    const result: unknown = await torosdk.importWalletFromPrivateKeyAndPassword({ pvKey: privateKey, password });
+    const address = typeof result === 'string' ? result : String(result);
+    // Persist the password so subsequent operations (transfer, TNS, KYC) work.
+    await setPassword(address, password);
+    return address;
   } catch (err) {
     wrapError(err);
   }
@@ -87,7 +98,7 @@ export async function getBalanceForCurrency(
   currency: Currency
 ): Promise<{ balance: string; currency: Currency }> {
   try {
-    const pwd = await resolvePassword(address, 'balance');
+    await authorizeOperation('balance');
     const balance = await torosdk.getCurrencyBalance({ currency, address });
     return { balance: String(balance), currency };
   } catch (err) {
@@ -99,7 +110,7 @@ export async function getBalances(
   address: string
 ): Promise<Array<{ balance: string; currency: Currency }>> {
   try {
-    const pwd = await resolvePassword(address, 'balance');
+    await authorizeOperation('balance');
     const currencies: Currency[] = [
       Currency.Naira,
       Currency.Dollar,
@@ -198,7 +209,7 @@ export async function submitKYC(
 ): Promise<unknown> {
   try {
     const pwd = await resolvePassword(address, 'kyc');
-    const result = await torosdk.performKYCForCustomer({ address, ...customerData } as any);
+    const result = await torosdk.performKYCForCustomer({ address, ...customerData, password: pwd } as any);
     return result;
   } catch (err) {
     wrapError(err);
