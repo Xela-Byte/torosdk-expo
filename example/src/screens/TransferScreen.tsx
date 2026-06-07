@@ -6,13 +6,20 @@ import {
 import { useTransfer, useBalance, useWallets } from 'torosdk-expo';
 import { Currency } from 'torosdk-expo/core';
 
-const CURRENCIES: Currency[] = ['NGN', 'USD', 'KSH', 'ZAR', 'GBP', 'EUR'];
+const CURRENCIES: Currency[] = [
+  Currency.Naira,
+  Currency.Dollar,
+  Currency.Kenyan_Shilling,
+  Currency.South_African_Rand,
+  Currency.Pound,
+  Currency.Euro,
+];
 
 export default function TransferScreen() {
   const wallets = useWallets();
   const [receiver, setReceiver] = useState('');
   const [amount, setAmount] = useState('');
-  const [currency, setCurrency] = useState<Currency>('NGN');
+  const [currency, setCurrency] = useState<Currency>(Currency.Naira);
 
   const transfer = useTransfer();
   const balance = useBalance({

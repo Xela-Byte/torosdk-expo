@@ -1,9 +1,12 @@
 {
   "name": "torosdk-expo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Expo wrapper for torosdk — secure password storage, TanStack Query hooks, and CLI init",
   "main": "dist/react/index.js",
   "types": "dist/react/index.d.ts",
+  "bin": {
+    "torosdk-expo": "./dist/cli/init.js"
+  },
   "exports": {
     ".": {
       "types": "./dist/react/index.d.ts",
@@ -21,7 +24,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && cp -r src/cli/templates dist/cli/",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
     "typecheck": "tsc --noEmit",

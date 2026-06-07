@@ -21,7 +21,7 @@ src/torosdk/
   auth.ts         ← her custom auth strategy (stub, ready to fill)
 ```
 
-It also prints: `✅ torosdk-expo ready. Next: choose an auth strategy in src/torosdk/auth.ts`
+It also prints: `torosdk-expo ready. Next: choose an auth strategy in src/torosdk/auth.ts`
 
 Amara opens `auth.ts`. She wants biometric for transfers but silent password fill for balance checks. She writes:
 
@@ -159,16 +159,6 @@ if (kyc.data?.verified) {
 
 ---
 
-**What Amara never had to:**
-- Import `torosdk` directly
-- Call `expo-secure-store` at all
-- Write a `useEffect` with `try/catch` for loading states
-- Polyfill anything
-- Manage a password-address mapping
+The package handles the boilerplate Amara doesn't want to think about — calling torosdk directly, wiring up SecureStore, polyfilling anything, managing password-address mappings, and hand-rolling `useEffect` + `try/catch` for every loading state. What she keeps is control over the things that matter for her app: the network, which operation types get biometric gates, and the wallet-switching UX (`useWallets().switch(address)` gives her the action; she builds the UI around it).
 
-**What she kept control over:**
-- Network (mainnet/testnet via env)
-- Auth thresholds per operation type
-- Wallet switching UX (the package gives her `useWallets().switch(address)`, she decides the UI)
-
-**Her project compiles and runs.** She clones it fresh, runs `npx torosdk-expo init` in the new clone, `npx expo start`, and it's working in under 15 minutes. Two minutes under the submission requirement.
+Her project compiles and runs. She clones it fresh, runs `npx torosdk-expo init` in the new clone, `npx expo start`, and it's working in under 15 minutes. Two minutes under the submission requirement.

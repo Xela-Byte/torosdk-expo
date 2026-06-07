@@ -4,34 +4,31 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
 [![Expo SDK](https://img.shields.io/badge/Expo%20SDK-52+-brightgreen.svg)](https://expo.dev/)
-[![Tests](https://img.shields.io/badge/tests-55%20passing-success.svg)](./__tests__)
 
-**Production-grade Expo / React Native wrapper around [torosdk](https://www.npmjs.com/package/torosdk)** — the official Toronet blockchain SDK. Secure password management via OS-native keystores, biometric-gated transactions, [TanStack Query v5](https://tanstack.com/query/v5) hooks with automatic cache invalidation, structured error handling, and a one-command CLI project scaffold.
+torosdk-expo wraps [torosdk](https://www.npmjs.com/package/torosdk) (the Toronet blockchain SDK) for Expo and React Native. It manages wallet passwords in the OS keystore, checks biometrics before sensitive operations, and gives you [TanStack Query v5](https://tanstack.com/query/v5) hooks for every Toronet API endpoint. There's also a CLI that scaffolds your project in one command.
 
 ---
 
-## Quick Start
+## Quick start
 
 ```bash
 npx torosdk-expo init
 ```
 
-This detects your Expo project, installs dependencies (`torosdk`, `@tanstack/react-query`, `expo-secure-store`, `expo-local-authentication`), and scaffolds `src/torosdk/` with config, auth strategy, and a provider wrapper ready to use.
+The CLI detects your Expo project, installs dependencies (`torosdk`, `@tanstack/react-query`, `expo-secure-store`, `expo-local-authentication`), and scaffolds `src/torosdk/` with config, an auth strategy, and a provider component. You pick an auth strategy and start using hooks.
 
 ---
 
-## Features
+## What you get
 
-- **Zero polyfills** — torosdk uses standard `fetch`; works natively in Hermes and JSC — no 200KB+ polyfill tax
-- **Secure password storage** — wallet passwords encrypted at rest via iOS Keychain / Android Keystore through `expo-secure-store`
-- **Biometric gates** — fingerprint / Face ID verification before transfers and sensitive operations via `expo-local-authentication`
-- **Structured error hierarchy** — `ToroError` base class with typed subclasses (`NetworkError`, `APIError`, `AuthBlockedError`, `StorageError`) for granular error handling
-- **TanStack Query v5 hooks** — `useBalance`, `useBalances`, `useTransfer`, `useWallets`, `useCreateWallet`, `useImportWallet`, `useDeleteWallet`, `useResolveTNS`, `useLookupTNS`, `useSetTNS`, `useKYCStatus`, `useSubmitKYC`, `useExchangeRates`
-- **Configurable auth strategies** — password (silent SecureStore fill), biometric (OS-level fingerprint / Face ID), or bring-your-own custom strategy
-- **Automatic cache invalidation** — mutations (transfer, TNS set, wallet create / delete) invalidate related queries seamlessly
-- **CLI init** — one command scaffolds config, auth, and provider; auto-detects `npm` / `yarn` / `pnpm`
-- **Full TypeScript support** — strict mode, declarations, source maps, `noUnusedLocals`, `noUnusedParameters`
-- **Subpath exports** — tree-shakeable: `torosdk-expo` (React), `torosdk-expo/core` (zero React), `torosdk-expo/cli` (Node)
+- **No polyfills.** torosdk uses standard `fetch`. Works natively in Hermes and JSC — no 200 KB+ polyfill overhead.
+- **Wallet passwords in the OS keystore.** Passwords sit encrypted in iOS Keychain or Android Keystore via `expo-secure-store`. They're never in React state and never serialized to JSON.
+- **Biometric gates on sensitive operations.** Fingerprint or Face ID via `expo-local-authentication` before transfers, wallet deletion, KYC submissions — whichever operations you configure.
+- **Typed errors you can switch on.** `ToroError` base class with `NetworkError`, `APIError`, `AuthBlockedError`, and `StorageError` subclasses. Every error has a `code`, a `detail` string, and the original `cause`.
+- **TanStack Query v5 hooks.** `useBalance`, `useBalances`, `useTransfer`, `useWallets`, `useCreateWallet`, `useImportWallet`, `useDeleteWallet`, `useResolveTNS`, `useLookupTNS`, `useSetTNS`, `useKYCStatus`, `useSubmitKYC`, `useExchangeRates`. Mutations invalidate related queries automatically.
+- **Auth strategies you plug in.** Password (silent SecureStore fill), biometric (OS-level fingerprint / Face ID), or write your own with `createCustomStrategy`.
+- **Tree-shakeable subpath exports.** `torosdk-expo` for React hooks, `torosdk-expo/core` for zero-React environments, `torosdk-expo/cli` for the Node.js scaffold script. The CLI never ships to your app bundle.
+- **Full TypeScript.** Strict mode, declarations, declaration maps, source maps. No `any` escapes.
 
 ---
 
@@ -83,34 +80,34 @@ This detects your Expo project, installs dependencies (`torosdk`, `@tanstack/rea
 └──────────────────────────────────────────────────────────────┘
 ```
 
-### Design Decisions
+### Design decisions
 
-| Decision | Rationale |
-|----------|-----------|
-| **TanStack Query v5** | Industry-standard async state management; built-in caching, retry, stale-while-revalidate, and mutation invalidation |
-| **Password in SecureStore, not in-memory** | Passwords are encrypted at rest via OS-native mechanisms; React state never holds plaintext passwords |
-| **Auth strategy pattern** | Decouples authentication from SDK calls; developers choose password / biometric / custom without SDK code changes |
-| **Separate core from React** | Tree-shakeable; non-React environments (Node scripts, CI) can use `torosdk-expo/core` directly |
-| **Operation categories** | Fine-grained control over which operations require biometric verification (`transfer`, `kyc`, `tns-write`, etc.) |
-| **Structured error hierarchy** | `instanceof` checks for precise error handling: `if (err instanceof AuthBlockedError)` for UX, `if (err instanceof APIError)` for status codes |
-| **CLI as separate entry point** | The scaffold script never ships to React Native bundles; it's Node-only and invoked via `npx` |
-| **No polyfills** | torosdk uses standard `fetch` — works in Hermes natively; avoids the 200KB+ polyfill tax |
+| Decision | Why |
+|----------|-----|
+| TanStack Query v5 for data fetching | Caching, retry, stale-while-revalidate, and mutation-driven invalidation come built in. No hand-rolled async state. |
+| Passwords in SecureStore, not React state | Passwords live in the OS keystore encrypted at rest. React state never touches plaintext. |
+| Auth strategy pattern | Swapping password for biometric (or custom auth) doesn't touch SDK code. One interface, three implementations shipped. |
+| Core separated from React | Scripts, CI jobs, and non-React tooling import from `torosdk-expo/core` without pulling in React or TanStack Query. |
+| Per-category operation gating | You choose which operations require biometric: `transfer` yes, `balance` no. Each hook declares its category. |
+| Typed error hierarchy | `instanceof` checks beat string matching. `if (err instanceof AuthBlockedError)` reads clearer than checking error codes. |
+| CLI as its own entry point | The scaffold script is Node-only. It's invoked via `npx` and never bundled into React Native apps. |
+| No polyfills | torosdk uses `fetch`. Hermes supports `fetch` natively. No Buffer, no crypto, no 200 KB of polyfill overhead. |
 
 ---
 
 ## Prerequisites
 
-- **Expo SDK 52+** or bare React Native with `expo` modules
-- **Node.js 18+** for the CLI init script
-- **React 18+** and **TanStack Query v5** as peer dependencies
-- **torosdk v0.2.0+** — the underlying Toronet blockchain SDK
+- Expo SDK 52+ or bare React Native with `expo` modules
+- Node.js 18+ for the CLI
+- React 18+ and TanStack Query v5 as peer dependencies
+- torosdk v0.2.0+
 
 ---
 
 ## Installation
 
 ```bash
-# Auto-install with the CLI (recommended):
+# Recommended: let the CLI set everything up
 npx torosdk-expo init
 
 # Or install manually:
@@ -180,15 +177,15 @@ export default function App() {
 }
 ```
 
-`ToronetProvider` accepts an optional `queryClient` prop if you need to customize TanStack Query defaults (retry count, stale time, etc.).
+`ToronetProvider` takes an optional `queryClient` prop if you need to customize TanStack Query defaults (retry count, stale time, etc.).
 
 ---
 
-## Hooks Reference
+## Hooks reference
 
-All hooks require `<ToronetProvider>` (or at minimum `<QueryClientProvider>`) in the component tree.
+All hooks need `<ToronetProvider>` (or at minimum `<QueryClientProvider>`) in the component tree.
 
-### Wallet Management
+### Wallet management
 
 #### `useWallets()`
 
@@ -215,22 +212,22 @@ function WalletPicker() {
 }
 ```
 
-**Returns:** `WalletsState`
+Returns `WalletsState`:
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `all` | `string[]` | All stored wallet addresses (lowercase) |
-| `active` | `string \| null` | Currently active wallet address |
-| `switchWallet` | `(address: string) => Promise<void>` | Sets active wallet (throws on error) |
-| `addWallet` | `(address: string) => Promise<void>` | Adds wallet to list and refreshes |
-| `removeWallet` | `(address: string) => Promise<void>` | Removes wallet from list and refreshes |
+| `active` | `string \| null` | Currently active wallet |
+| `switchWallet` | `(address: string) => Promise<void>` | Sets active wallet |
+| `addWallet` | `(address: string) => Promise<void>` | Adds wallet to list, refreshes |
+| `removeWallet` | `(address: string) => Promise<void>` | Removes wallet from list, refreshes |
 | `refresh` | `() => Promise<void>` | Re-reads wallets from SecureStore |
-| `isLoading` | `boolean` | `true` during initial load |
-| `error` | `string \| null` | Error message if load/operation failed |
+| `isLoading` | `boolean` | True during initial load |
+| `error` | `string \| null` | Error message if something failed |
 
 #### `useCreateWallet(username, password)` — Mutation
 
-Creates a new on-chain wallet, stores password in SecureStore, and adds to wallet list.
+Creates a new on-chain wallet, stores the password in SecureStore, and adds it to the wallet list.
 
 ```tsx
 import { useCreateWallet } from 'torosdk-expo';
@@ -239,11 +236,11 @@ const mutation = useCreateWallet();
 const address = await mutation.mutateAsync({ username: 'alice', password: 's3cret!' });
 ```
 
-The mutation runs the `wallet-create` auth gate, calls `torosdk.createWallet()`, then persists the password and updates the wallet list atomically.
+The mutation runs the `wallet-create` auth gate, calls `torosdk.createWallet()`, persists the password, and updates the wallet list atomically.
 
 #### `useImportWallet(privateKey, password)` — Mutation
 
-Imports an existing wallet from private key.
+Imports an existing wallet from a private key.
 
 ```tsx
 import { useImportWallet } from 'torosdk-expo';
@@ -254,7 +251,7 @@ const address = await mutation.mutateAsync({ privateKey: '0x...', password: 's3c
 
 #### `useDeleteWallet()` — Mutation
 
-Removes wallet password from SecureStore and removes address from wallet list. Runs the `wallet-delete` auth gate.
+Removes a wallet's password from SecureStore and drops the address from the wallet list. Runs the `wallet-delete` auth gate.
 
 ```tsx
 import { useDeleteWallet } from 'torosdk-expo';
@@ -269,7 +266,7 @@ await mutation.mutateAsync('0xaddress');
 
 #### `useBalance({ address, currency, enabled? })`
 
-Fetches balance for a single currency.
+Fetches the balance for a single currency.
 
 ```tsx
 import { useBalance } from 'torosdk-expo';
@@ -286,7 +283,7 @@ function NairaBalance() {
 }
 ```
 
-**Returns:** TanStack Query result with `{ balance: string; currency: Currency }`.
+Returns a TanStack Query result with `{ balance: string; currency: Currency }`.
 
 #### `useBalances({ address, enabled? })`
 
@@ -301,7 +298,7 @@ function AllBalances() {
 }
 ```
 
-**Returns:** TanStack Query result with `Array<{ balance: string; currency: Currency }>`.
+Returns a TanStack Query result with `Array<{ balance: string; currency: Currency }>`.
 
 ---
 
@@ -309,7 +306,7 @@ function AllBalances() {
 
 #### `useTransfer()` — Mutation
 
-Sends funds from one wallet to another. Biometric gate fires automatically if configured.
+Sends funds from one wallet to another. The biometric gate fires automatically if you configured it for `transfer`.
 
 ```tsx
 import { useTransfer } from 'torosdk-expo';
@@ -328,7 +325,7 @@ function SendForm() {
       });
       console.log('TX hash:', result.transactionHash);
     } catch (err) {
-      // err may be AuthBlockedError (user canceled biometric) or NetworkError / APIError
+      // err may be AuthBlockedError (user canceled biometric), NetworkError, or APIError
     }
   };
 
@@ -336,7 +333,7 @@ function SendForm() {
 }
 ```
 
-**On success:** Invalidates balance queries for the sender automatically via TanStack Query cache invalidation.
+On success, the sender's balance queries are invalidated automatically through TanStack Query.
 
 ---
 
@@ -355,7 +352,7 @@ function LookupName({ name }: { name: string }) {
 }
 ```
 
-**Cache:** 5-minute stale time. Disabled when `name` is empty.
+5-minute stale time. Disabled when `name` is empty.
 
 #### `useLookupTNS(address)` — Query
 
@@ -379,7 +376,7 @@ const mutation = useSetTNS();
 await mutation.mutateAsync({ address: '0x...', name: 'alice' });
 ```
 
-**On success:** Invalidates both resolve and lookup queries for the affected name / address.
+On success, invalidates resolve and lookup queries for the affected name / address.
 
 ---
 
@@ -396,7 +393,7 @@ const { data, isLoading } = useKYCStatus({ address: '0x...' });
 // data: { verified: boolean; details?: unknown }
 ```
 
-**Cache:** 5-minute stale time.
+5-minute stale time.
 
 #### `useSubmitKYC()` — Mutation
 
@@ -412,11 +409,11 @@ await mutation.mutateAsync({
 });
 ```
 
-**On success:** Invalidates KYC status query for the address.
+On success, invalidates the KYC status query for the address.
 
 ---
 
-### Exchange Rates
+### Exchange rates
 
 #### `useExchangeRates()` — Query
 
@@ -430,27 +427,25 @@ const { data, isLoading } = useExchangeRates();
 // Example: [{ pair: 'USD/NGN', rate: 1575.50 }, ...]
 ```
 
-**Auto-refresh:** Stale time is 60 seconds — TanStack Query re-fetches automatically when the component mounts and data is stale.
+60-second stale time — TanStack Query refetches automatically when data goes stale.
 
 ---
 
-## Package Structure
+## Package structure
 
-| Entry point | Contains | Import style |
-|-------------|----------|-------------|
-| `torosdk-expo` | React hooks + `ToronetProvider` + `queryKeys` | `import { useBalance } from 'torosdk-expo'` |
+| Entry point | Contains | How you import |
+|-------------|----------|----------------|
+| `torosdk-expo` | React hooks + ToronetProvider + queryKeys | `import { useBalance } from 'torosdk-expo'` |
 | `torosdk-expo/core` | Zero React: types, auth strategies, storage, config, error classes, typed SDK wrappers | `import { createBiometricStrategy } from 'torosdk-expo/core'` |
 | `torosdk-expo/cli` | `npx torosdk-expo init` scaffold script (Node.js only) | Invoked via CLI, not imported in app code |
 
-### Tree-shaking
-
-Because hooks, core, and CLI are separate entry points, bundlers (Metro, Webpack) only include what your app imports. The CLI entry (~5 KB) is never bundled into React Native apps.
+Because hooks, core, and CLI are separate entry points, bundlers (Metro, Webpack) only include what your app actually imports. The CLI entry (~5 KB) never ships to React Native bundles.
 
 ---
 
-## Error Handling
+## Error handling
 
-All errors thrown by this package extend `ToroError` (exported from `torosdk-expo/core`):
+Every error thrown by this package extends `ToroError` (exported from `torosdk-expo/core`):
 
 ```ts
 import {
@@ -462,19 +457,14 @@ import {
 } from 'torosdk-expo/core';
 ```
 
-| Error class | `code` | When thrown |
-|-------------|--------|-------------|
+| Error class | `code` | When it's thrown |
+|-------------|--------|------------------|
 | `NetworkError` | `'NETWORK'` | Network timeouts, DNS failures, `fetch` errors |
-| `APIError` | `'API'` | Toronet API returns non-2xx; includes `status` field |
-| `AuthBlockedError` | `'AUTH_BLOCKED'` | User canceled biometric, or custom strategy denied; includes `operation` field |
+| `APIError` | `'API'` | Toronet API returns non-2xx status; includes `status` field |
+| `AuthBlockedError` | `'AUTH_BLOCKED'` | User canceled biometric or custom strategy denied; includes `operation` field |
 | `StorageError` | `'STORAGE'` | SecureStore read / write failures |
 
-**All errors have:**
-- `code: ToroErrorCode` — machine-readable (`'NETWORK' | 'API' | 'AUTH_BLOCKED' | 'STORAGE'`)
-- `detail: string` — human-readable description
-- `cause?: unknown` — the original underlying error
-
-**Recommended patterns:**
+All errors have `code` (a `ToroErrorCode`), `detail` (a human-readable string), and optionally `cause` (the underlying error).
 
 ```ts
 try {
@@ -494,20 +484,20 @@ try {
 
 ---
 
-## Auth Strategies
+## Auth strategies
 
-| Strategy | Factory | Security level | Use case |
-|----------|---------|---------------|----------|
-| Password | `createPasswordStrategy()` | 🔒 Password stored in OS keystore | Development, trusted environments |
-| Biometric | `createBiometricStrategy({ requireFor, skipFor })` | 🔒🔒 OS biometric + keystore | Production, untrusted environments |
-| Custom | `createCustomStrategy(fn)` | 🔒🔒🔒 You control it | Social auth, hardware keys, server-side gating |
+| Strategy | Factory | What it does |
+|----------|---------|--------------|
+| Password | `createPasswordStrategy()` | Reads stored password from OS keystore silently. Falls back to a prompt callback if none is cached. |
+| Biometric | `createBiometricStrategy({ requireFor, skipFor })` | Triggers fingerprint / Face ID before sensitive operations. Falls back to device passcode or password prompt depending on config. |
+| Custom | `createCustomStrategy(fn)` | Calls your async function. Wire up social auth, hardware keys, server-side gating — whatever you need. |
 
-### Operation Categories
+### Operation categories
 
-Each operation falls into one of these categories for fine-grained auth control:
+Each hook falls into one category, so you can configure auth gates per operation type:
 
-| Category | Operations |
-|----------|-----------|
+| Category | Hooks / operations |
+|----------|-------------------|
 | `balance` | `useBalance`, `useBalances` |
 | `transfer` | `useTransfer` |
 | `kyc` | `useKYCStatus`, `useSubmitKYC` |
@@ -526,62 +516,63 @@ Each operation falls into one of these categories for fine-grained auth control:
 npx torosdk-expo init
 ```
 
-**What it does:**
+What happens:
 
-1. **Detects** Expo project root (`app.json` / `app.config.js` / `app.config.ts`)
-2. **Identifies** package manager (`npm`, `yarn`, or `pnpm`)
-3. **Installs** dependencies: `torosdk`, `@tanstack/react-query`, `expo-secure-store`, `expo-local-authentication`
-4. **Scaffolds** `src/torosdk/` with three files:
+1. Detects your Expo project root (`app.json` / `app.config.js` / `app.config.ts`)
+2. Figures out your package manager (`npm`, `yarn`, or `pnpm`)
+3. Installs `torosdk`, `@tanstack/react-query`, `expo-secure-store`, and `expo-local-authentication`
+4. Scaffolds `src/torosdk/` with three files:
    - `config.ts` — network config (reads `TOROSDK_NETWORK` from env)
-   - `auth.ts` — pre-configured auth strategies (uncomment your choice)
-   - `provider.tsx` — `ToroWrapper` component combining config + auth
-5. **Appends** `TOROSDK_NETWORK=testnet` to `.env.example`
-6. **Prints** next-step instructions
+   - `auth.ts` — pre-configured auth strategies (uncomment the one you want)
+   - `provider.tsx` — `ToroWrapper` combining config + auth
+5. Appends `TOROSDK_NETWORK=testnet` to `.env.example`
+6. Prints what to do next
 
-The scaffolded code is designed to work immediately — change one line in `auth.ts` to switch from password to biometric.
+The scaffolded code works immediately — change one line in `auth.ts` to switch from password to biometric.
 
 ---
 
-## Example App
+## Example app
 
-See the `example/` directory for a complete Expo SDK 52 application exercising every hook:
+The `example/` directory has a complete Expo SDK 52 app that exercises every hook:
 
-| Screen | Hooks demonstrated |
-|--------|--------------------|
+| Screen | Hooks used |
+|--------|------------|
 | `HomeScreen` | `useWallets`, `useCreateWallet`, `useImportWallet`, `useDeleteWallet` |
 | `TransferScreen` | `useTransfer`, `useBalance` |
 | `TNSScreen` | `useResolveTNS`, `useLookupTNS`, `useSetTNS` |
 | `KYCScreen` | `useKYCStatus`, `useSubmitKYC` |
 | `ExchangeRatesScreen` | `useExchangeRates` |
 
-The example app uses `expo-router`-compatible screen patterns, environment variable-driven config, and demonstrates error handling for each hook.
+It uses expo-router-compatible screen patterns, env-driven config, and shows error handling for each hook.
 
 ---
 
 ## Testing
 
 ```bash
-npm test              # Run all 55 tests across 8 suites
+npm test              # 55 tests across 8 suites
 npm run test:watch    # Watch mode
-npm run typecheck     # TypeScript strict mode zero-error check
+npm run typecheck     # Strict TypeScript check, zero errors
 npm run build         # Compile to dist/
 ```
 
-**Test coverage:**
-- `__tests__/core/auth.test.ts` — 3 auth strategies (password, biometric, custom)
-- `__tests__/core/sdk.test.ts` — All 12 SDK wrappers with error normalization
+What's covered:
+
+- `__tests__/core/auth.test.ts` — password, biometric, and custom strategies
+- `__tests__/core/sdk.test.ts` — all 12 SDK wrappers with error normalization
 - `__tests__/core/storage.test.ts` — SecureStore CRUD operations
-- `__tests__/react/provider.test.tsx` — Context provision and error boundary
-- `__tests__/react/useBalance.test.tsx` — Single and multi-currency queries
-- `__tests__/react/useTransfer.test.tsx` — Transfer lifecycle, pending / success / error states
-- `__tests__/react/useWallets.test.tsx` — Wallet CRUD, empty state, storage failure
+- `__tests__/react/provider.test.tsx` — context provision and error boundary
+- `__tests__/react/useBalance.test.tsx` — single and multi-currency queries
+- `__tests__/react/useTransfer.test.tsx` — transfer lifecycle, pending / success / error states
+- `__tests__/react/useWallets.test.tsx` — wallet CRUD, empty state, storage failure
 - `__tests__/cli/init.test.ts` — CLI detection logic and template generation
 
 ---
 
-## How to Extend
+## Extending
 
-### Add a new auth strategy
+### Add a custom auth strategy
 
 ```ts
 import { createCustomStrategy } from 'torosdk-expo/core';
@@ -611,7 +602,7 @@ export async function getTransactionHistory(address: string): Promise<Transactio
 
 ### Add a custom hook
 
-Following the existing pattern (query key → useQuery + SDK call):
+Follow the existing pattern (query key → useQuery + SDK call):
 
 ```ts
 import { useQuery } from '@tanstack/react-query';
@@ -630,11 +621,11 @@ export function useTransactionHistory(address: string) {
 
 ---
 
-## API Reference
+## API reference
 
-### Core SDK Functions (`torosdk-expo/core`)
+### Core SDK functions (`torosdk-expo/core`)
 
-All core functions handle password injection, auth gate checks, and structured error normalization automatically:
+Every function handles password injection, auth gate checks, and error normalization for you:
 
 | Function | Signature | Auth gate |
 |----------|-----------|-----------|
@@ -651,7 +642,7 @@ All core functions handle password injection, auth gate checks, and structured e
 | `submitKYC` | `(address: string, customerData: Record<string, unknown>) => Promise<unknown>` | `kyc` |
 | `getExchangeRates` | `() => Promise<Array<{ pair, rate }>>` | `exchange-rates` |
 
-### Storage Functions (`torosdk-expo/core`)
+### Storage functions (`torosdk-expo/core`)
 
 | Function | Description |
 |----------|-------------|
@@ -659,12 +650,12 @@ All core functions handle password injection, auth gate checks, and structured e
 | `setPassword(address, password)` | Store password in SecureStore |
 | `deletePassword(address)` | Remove password from SecureStore |
 | `getWalletList()` | Get all stored wallet addresses |
-| `addWalletToList(address)` | Add address (no-op if exists) |
-| `removeWalletFromList(address)` | Remove address (no-op if absent) |
+| `addWalletToList(address)` | Add address (no-op if already present) |
+| `removeWalletFromList(address)` | Remove address (no-op if not present) |
 | `getActiveWallet()` | Get currently active wallet |
 | `setActiveWallet(address)` | Set active wallet |
 
-### Config Functions (`torosdk-expo/core`)
+### Config functions (`torosdk-expo/core`)
 
 | Function | Description |
 |----------|-------------|
@@ -674,25 +665,19 @@ All core functions handle password injection, auth gate checks, and structured e
 
 ---
 
-## Environment Variables
+## Environment variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `TOROSDK_NETWORK` | Network to connect to (`testnet` or `mainnet`) | `testnet` |
 
-**Security note:** Never commit secrets to version control. Wallet passwords are stored in the OS keystore (iOS Keychain / Android Keystore) — not in env vars, not in AsyncStorage, not in app code.
+Passwords are stored in the OS keystore, not in env vars, AsyncStorage, or app code. Don't commit secrets to version control.
 
 ---
 
-## Project Status
+## State of the package
 
-- ✅ Complete React hooks (8 queries + 4 mutations)
-- ✅ Complete core SDK wrappers (12 functions)
-- ✅ CLI init with template scaffold
-- ✅ 55 tests passing, zero TypeScript errors
-- ✅ Example Expo SDK 52 app
-- ✅ Structured error hierarchy
-- ✅ Subpath exports for tree-shaking
+All 12 hooks are implemented (8 queries + 4 mutations), along with 12 core SDK wrappers, the CLI init tool, and a structured error hierarchy. The test suite covers 8 suites with 55 passing tests and zero TypeScript errors. Subpath exports work for tree-shaking. There's a complete example Expo SDK 52 app in `example/`.
 
 ---
 
@@ -700,9 +685,9 @@ All core functions handle password injection, auth gate checks, and structured e
 
 1. Fork the repository
 2. Create a feature branch
-3. Write tests for any new functionality
-4. Ensure `npm test` and `npm run typecheck` pass
-5. Submit a pull request
+3. Write tests for new functionality
+4. Make sure `npm test` and `npm run typecheck` pass
+5. Open a pull request
 
 ---
 
@@ -712,4 +697,4 @@ MIT © ToroForge Collective
 
 ---
 
-**Built for the Toronet ecosystem.** For questions, find us on [Toronet Discord](https://discord.gg/toronet) or open an issue on GitHub.
+Built for the Toronet ecosystem. Questions? Find us on [Toronet Discord](https://discord.gg/toronet) or open an issue on GitHub.
