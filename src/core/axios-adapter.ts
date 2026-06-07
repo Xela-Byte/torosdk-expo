@@ -1,24 +1,60 @@
 /**
  * @fileoverview
- * Patches axios to use `fetch` for GET requests that carry a JSON body.
+ * Patches axios to use a raw XMLHttpRequest for GET requests that carry a
+ * JSON body.
  *
  * **Why this exists:**
- * React Native's XMLHttpRequest polyfill follows the XMLHttpRequest spec
- * which mandates that `send(body)` set `body` to `null` for GET/HEAD
- * methods.  torosdk (v0.2.0) uses `axios(config)` with `method: "get"` AND
- * a JSON `data` payload for balance and other read-only queries.  The
- * Toronet API **only** accepts GET-with-JSON-body — POST returns 404 and
- * query parameters are not parsed.
+ * React Native's `fetch` (backed by `whatwg-fetch`) follows the WHATWG Fetch
+ * spec which mandates throwing a TypeError for GET/HEAD requests with a body.
+ * torosdk (v0.2.0) uses `axios(config)` with `method: "get"` AND a JSON
+ * `data` payload for balance and other read-only queries.  The Toronet API
+ * **only** accepts GET-with-JSON-body — POST returns 404 and query
+ * parameters are not parsed.
  *
- * React Native's `fetch` (backed by NSURLSession on iOS) does *not* have
- * the same restriction, so we route GET+body requests through fetch
- * instead of XHR.
+ * React Native's XMLHttpRequest does *not* have the same restriction — it
+ * passes `data` directly to `RCTNetworking.sendRequest()` without checking
+ * the HTTP method.  So we route GET+body requests through a raw XHR instead
+ * of the default adapter chain (which would use `fetch` via whatwg-fetch).
  *
  * Called automatically by {@link createConfig} — users don't need to
  * import this file directly.
  */
 
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios';
+
+/**
+ * Minimal XHR interface — avoids pulling in DOM lib types so the SDK
+ * compiles without `lib: ["DOM"]`.  At runtime this is React Native's
+ * `XMLHttpRequest` (Libraries/Network/XMLHttpRequest.js) which passes
+ * `send(body)` through to `RCTNetworking` without stripping the body
+ * for GET/HEAD, unlike the WHATWG `fetch` spec.
+ *
+ * @internal
+ */
+interface XHR {
+  open(method: string, url: string, async: boolean): void;
+  setRequestHeader(key: string, value: string): void;
+  send(body?: string | null): void;
+  abort(): void;
+  getAllResponseHeaders(): string;
+  responseText: string;
+  response: unknown;
+  status: number;
+  statusText: string;
+  timeout: number;
+  responseType: string;
+  onload: (() => void) | null;
+  onerror: (() => void) | null;
+  ontimeout: (() => void) | null;
+  onabort: (() => void) | null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const _global = globalThis as any;
+const _XHR: (new () => XHR) | null =
+  typeof _global.XMLHttpRequest !== 'undefined'
+    ? _global.XMLHttpRequest
+    : null;
 
 /**
  * Activate the custom adapter.
@@ -43,73 +79,143 @@ export function setupAxiosAdapter(): void {
   ): Promise<any> {
     // Only intercept GET requests that carry a body
     if (config.method?.toLowerCase() === 'get' && config.data != null) {
-      try {
-        // Build fetch-compatible headers from axios config
-        const fetchHeaders = new Headers();
+      return new Promise((resolve, reject) => {
+        const XHRCtor = _XHR;
+        if (!XHRCtor) {
+          // No XHR available — fall back to the original adapter chain
+          const adapter =
+            typeof fallbackAdapter === 'function'
+              ? fallbackAdapter
+              : axios.getAdapter(fallbackAdapter ?? ['xhr', 'http', 'fetch']);
+          adapter(config).then(resolve, reject);
+          return;
+        }
+
+        const xhr = new XHRCtor();
+        xhr.open('GET', config.url!, true);
+
+        // Copy headers from axios config to XHR
         if (config.headers) {
           for (const key of Object.keys(config.headers)) {
             const val = config.headers[key];
             if (val != null) {
-              fetchHeaders.set(key, String(val));
+              xhr.setRequestHeader(key, String(val));
             }
           }
         }
 
-        // --- perform the request via fetch ---
-        const response = await fetch(config.url!, {
-          method: 'GET',
-          headers: fetchHeaders,
-          body: JSON.stringify(config.data),
-          signal: config.signal as AbortSignal | undefined,
-        });
+        // Apply timeout
+        if (config.timeout && config.timeout > 0) {
+          xhr.timeout = config.timeout;
+        }
 
-        // Parse response body
-        const contentType = response.headers.get('content-type') ?? '';
-        const data: unknown = contentType.includes('application/json')
-          ? await response.json()
-          : await response.text();
+        // Apply responseType
+        if (config.responseType) {
+          xhr.responseType = config.responseType;
+        }
 
-        // Non-2xx → AxiosError (mirrors what the XHR adapter does)
-        if (!response.ok) {
-          throw new AxiosError(
-            `Request failed with status code ${response.status}`,
-            AxiosError.ERR_BAD_RESPONSE,
-            config,
-            null,
-            {
-              data,
-              status: response.status,
-              statusText: response.statusText,
-              headers: response.headers as unknown as Record<string, string>,
+        xhr.onload = () => {
+          // Build axios-shaped response headers
+          const responseHeaders: Record<string, string> = {};
+          const allHeaders = xhr.getAllResponseHeaders();
+          if (allHeaders) {
+            for (const line of allHeaders.trim().split(/[\r\n]+/)) {
+              const parts = line.split(': ');
+              if (parts.length >= 2) {
+                const key = parts.shift()!.toLowerCase();
+                responseHeaders[key] = parts.join(': ');
+              }
+            }
+          }
+
+          // Parse response body (axios normally handles this; we mirror it)
+          let responseData: unknown = xhr.responseText;
+          if (
+            config.responseType === 'json' ||
+            (responseHeaders['content-type'] ?? '').includes('application/json')
+          ) {
+            try {
+              responseData = JSON.parse(xhr.responseText);
+            } catch {
+              responseData = xhr.responseText;
+            }
+          }
+
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve({
+              data: responseData,
+              status: xhr.status,
+              statusText: xhr.statusText,
+              headers: responseHeaders,
               config,
-            },
+              request: xhr,
+            });
+          } else {
+            reject(
+              new AxiosError(
+                `Request failed with status code ${xhr.status}`,
+                AxiosError.ERR_BAD_RESPONSE,
+                config,
+                xhr,
+                {
+                  data: responseData,
+                  status: xhr.status,
+                  statusText: xhr.statusText,
+                  headers: responseHeaders as unknown as Record<string, string>,
+                  config,
+                },
+              ),
+            );
+          }
+        };
+
+        xhr.onerror = () => {
+          reject(
+            new AxiosError(
+              'Network Error',
+              AxiosError.ERR_NETWORK,
+              config,
+              xhr,
+            ),
           );
+        };
+
+        xhr.ontimeout = () => {
+          reject(
+            new AxiosError(
+              `timeout of ${config.timeout}ms exceeded`,
+              AxiosError.ETIMEDOUT,
+              config,
+              xhr,
+            ),
+          );
+        };
+
+        xhr.onabort = () => {
+          reject(
+            new AxiosError(
+              'Request aborted',
+              AxiosError.ECONNABORTED,
+              config,
+              xhr,
+            ),
+          );
+        };
+
+        // Handle cancellation
+        if (config.signal) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (config.signal as any).addEventListener('abort', () => xhr.abort());
+          if (config.signal.aborted) {
+            xhr.abort();
+            return;
+          }
         }
 
-        // Success → axios-shaped response object
-        return {
-          data,
-          status: response.status,
-          statusText: response.statusText,
-          headers: response.headers as unknown as Record<string, string>,
-          config,
-          request: null,
-        };
-      } catch (error: unknown) {
-        // Re-throw axios errors as-is
-        if (axios.isAxiosError(error)) {
-          throw error;
-        }
-        // Wrap native errors (e.g. TypeError from Network_Error) as AxiosError
-        const message =
-          error instanceof Error ? error.message : String(error);
-        throw new AxiosError(
-          `Network Error: ${message}`,
-          AxiosError.ERR_NETWORK,
-          config,
-          null,
-        );
-      }
+        // axios's transformRequest already stringified the data, so
+        // config.data is a string at this point — send it as-is.
+        xhr.send(config.data as string | null);
+      });
     }
 
     // --- all other requests use the original adapter chain ---

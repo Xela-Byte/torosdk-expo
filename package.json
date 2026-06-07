@@ -1,6 +1,6 @@
 {
   "name": "torosdk-expo",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Expo wrapper for torosdk — secure password storage, TanStack Query hooks, and CLI init",
   "main": "dist/react/index.js",
   "types": "dist/react/index.d.ts",
