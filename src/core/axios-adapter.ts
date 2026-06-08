@@ -56,6 +56,16 @@ interface RawRequestResult {
   body: string;
 }
 
+/** Shape returned by the custom axios adapter. */
+interface AxiosAdapterResponse {
+  data: unknown;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+  config: InternalAxiosRequestConfig;
+  request?: unknown;
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const _global = globalThis as any;
 const _XHR: (new () => XHR) | null =
@@ -63,7 +73,6 @@ const _XHR: (new () => XHR) | null =
     ? _global.XMLHttpRequest
     : null;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type NativeRawRequestFn = (params: {
   host: string;
   port: number;
@@ -92,14 +101,13 @@ function getNativeRawRequest(): NativeRawRequestFn | null {
     return _nativeRawRequestCache;
   }
   try {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const { Platform, NativeModules } = require('react-native');
     _nativeRawRequestCache =
       Platform.OS === 'ios' &&
       NativeModules.ToroNetworking &&
       typeof NativeModules.ToroNetworking.rawRequest === 'function'
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          (NativeModules.ToroNetworking.rawRequest as (params: unknown) => Promise<RawRequestResult>)
+        ? (NativeModules.ToroNetworking.rawRequest as (params: unknown) => Promise<RawRequestResult>)
         : null;
   } catch {
     _nativeRawRequestCache = null;
@@ -194,10 +202,9 @@ export function setupAxiosAdapter(debug?: boolean): void {
     );
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   axios.defaults.adapter = async function customAdapter(
     config: InternalAxiosRequestConfig,
-  ): Promise<any> {
+  ): Promise<AxiosAdapterResponse> {
     // Only intercept GET requests that carry a body
     if (config.method?.toLowerCase() === 'get' && config.data != null) {
       if (_debug) {
