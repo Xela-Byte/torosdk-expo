@@ -92,6 +92,39 @@ The CLI detects your Expo project, installs dependencies (`torosdk`, `@tanstack/
 | Typed error hierarchy | `instanceof` checks beat string matching. `if (err instanceof AuthBlockedError)` reads clearer than checking error codes. |
 | CLI as its own entry point | The scaffold script is Node-only. It's invoked via `npx` and never bundled into React Native apps. |
 | No polyfills | torosdk uses `fetch`. Hermes supports `fetch` natively. No Buffer, no crypto, no 200 KB of polyfill overhead. |
+| Native HTTP transport for iOS 26+ | `ToroNetworking.m` (NWConnection) bypasses CFNetwork's Darwin 25 GET+body restriction. The axios adapter delegates to it automatically on iOS. Fallback to standard `fetch` on Android and other platforms. |
+
+---
+
+## iOS 26+ (Darwin 25) native transport
+
+Starting in iOS 26, CFNetwork blocks `GET` requests that carry an HTTP body with `NSURLErrorDomain -1103` ("resource exceeds maximum size"). The Toronet API uses `GET`+JSON-body for all read queries (balances, TNS, KYC, exchange rates), so those requests fail on iOS 26 simulators and devices without a transport-layer workaround.
+
+**What we ship.** `torosdk-expo` bundles a native `NWConnection` module (`ios/ToroNetworking.m`) that sends raw HTTP/1.1 bytes over a TCP+TLS socket using Network.framework. Because it operates below CFNetwork, it is **not** subject to the Darwin 25 GET+body restriction.
+
+**How it fits in.** The JS-side axios adapter detects the native module at runtime. When `ToroNetworking` is available (iOS), it delegates all `GET` requests to native code; on Android and elsewhere, requests go through the standard `fetch` path unchanged.
+
+```
+┌──────────────────────┐
+│   torosdk API call   │
+│   (GET + JSON body)  │
+└──────────┬───────────┘
+           │
+     ┌─────▼──────┐     iOS?     ┌───────────────────┐
+     │axios adapter│─────────────▶│ ToroNetworking.m  │
+     └─────┬──────┘     yes      │  NWConnection      │
+           │                     │  TCP+TLS → Toronet │
+           │  no (Android/other) └───────────────────┘
+           ▼
+     ┌──────────┐
+     │  fetch() │
+     │ standard │
+     └──────────┘
+```
+
+The `Network` framework is linked automatically via `torosdk-expo.podspec` — no extra linker flags or manual config needed. Run `npx pod-install` after upgrading to pick up the new native module.
+
+> **Note:** This module builds for iOS (simulator and device) with a minimum deployment target of iOS 15.1, matching Expo SDK 52+.
 
 ---
 
