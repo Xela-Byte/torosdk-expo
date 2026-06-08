@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useEffect, type ReactNode } from 'react';
+import React, { createContext, useContext, useMemo, useEffect, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ToronetConfig } from '../core/types';
 import type { AuthStrategy } from '../core/auth';
@@ -67,7 +67,7 @@ export function ToronetProvider({
   authStrategy,
   queryClient,
   children,
-}: ToronetProviderProps): JSX.Element {
+}: ToronetProviderProps): React.JSX.Element {
   const value = useMemo<ToronetContextValue>(
     () => ({ config, authStrategy }),
     [config, authStrategy]

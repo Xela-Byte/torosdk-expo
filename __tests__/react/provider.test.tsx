@@ -5,7 +5,7 @@ jest.mock('../../src/core/auth', () => ({
 }));
 
 import { render } from '@testing-library/react-native';
-import { Text } from 'react-native';
+import { Text } from '../../__tests__/__mocks__/react-native';
 import { ToronetProvider, useToronetContext } from '../../src/react/provider';
 import { createPasswordStrategy } from '../../src/core/auth';
 
