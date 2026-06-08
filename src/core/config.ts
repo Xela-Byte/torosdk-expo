@@ -7,7 +7,7 @@ let _config: ToronetConfig | null = null;
 
 /** Default Toronet API endpoints for each network. */
 const DEFAULT_API_BASE_URLS: Record<ToronetNetwork, string> = {
-  testnet: 'http://testnet.toronet.org',
+  testnet: 'http://testnet.toronet.org/api',
   mainnet: 'https://api.toronet.org',
 };
 
@@ -36,7 +36,7 @@ export function createConfig(config: ToronetConfig): ToronetConfig {
     config.apiBaseUrl ?? DEFAULT_API_BASE_URLS[config.network];
 
   // Patch axios BEFORE any torosdk calls so GET+body requests use
-  // fetch instead of XHR (which strips body on GET per spec).
+  // XHR instead of fetch (which throws on GET+body per spec).
   setupAxiosAdapter();
 
   // Initialize the underlying torosdk so its network calls use the

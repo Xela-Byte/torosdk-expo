@@ -184,8 +184,13 @@ export async function getBalanceForCurrency(
 ): Promise<{ balance: string; currency: Currency }> {
   try {
     await authorizeOperation('balance');
-    const balance = await torosdk.getCurrencyBalance({ currency, address });
-    return { balance: String(balance), currency };
+    const raw = await torosdk.getCurrencyBalance({ currency, address });
+    // API returns { result, balance, error } — extract the balance field
+    const balance =
+      raw && typeof raw === 'object' && 'balance' in raw
+        ? String((raw as { balance: unknown }).balance ?? '0')
+        : String(raw);
+    return { balance, currency };
   } catch (err) {
     wrapError(err);
   }
@@ -218,8 +223,13 @@ export async function getBalances(
     const results = await Promise.all(
       currencies.map(async (currency) => {
         try {
-          const balance = await torosdk.getCurrencyBalance({ currency, address });
-          return { balance: String(balance), currency };
+          const raw = await torosdk.getCurrencyBalance({ currency, address });
+          // API returns { result, balance, error } — extract the balance field
+          const balance =
+            raw && typeof raw === 'object' && 'balance' in raw
+              ? String((raw as { balance: unknown }).balance ?? '0')
+              : String(raw);
+          return { balance, currency };
         } catch {
           return { balance: '0', currency };
         }

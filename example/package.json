@@ -1,6 +1,6 @@
 {
   "name": "example",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
@@ -13,8 +13,8 @@
     "@react-navigation/native-stack": "^6.11.0",
     "@tanstack/react-query": "^5.101.0",
     "expo": "~52.0.0",
-    "expo-local-authentication": "^56.0.4",
-    "expo-secure-store": "^56.0.4",
+    "expo-local-authentication": "~15.0.2",
+    "expo-secure-store": "~14.2.4",
     "expo-status-bar": "~2.0.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
@@ -23,7 +23,7 @@
     "react-native-screens": "~4.4.0",
     "react-native-web": "~0.19.13",
     "torosdk": "^0.2.0",
-    "torosdk-expo": "^0.1.3"
+    "torosdk-expo": "^0.1.6"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

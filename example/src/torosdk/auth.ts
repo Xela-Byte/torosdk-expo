@@ -1,26 +1,36 @@
 import {
+  createPasswordStrategy,
   createBiometricStrategy,
+  createCustomStrategy,
   type AuthStrategy,
 } from 'torosdk-expo/core';
 
 /**
- * Biometric auth strategy — requires fingerprint/Face ID for sensitive operations.
+ * Choose your auth strategy:
  *
- * Adjust requireFor / skipFor to match your app's security requirements.
- * To switch to password or custom auth, see the commented alternatives below.
+ * 1. Password — password is stored in SecureStore and filled silently.
+ *    Uncomment: export const authStrategy = createPasswordStrategy();
+ *
+ * 2. Biometric — requires fingerprint/Face ID for sensitive operations.
+ *    Uncomment the biometricStrategy below and adjust which operation
+ *    categories require biometric verification.
+ *
+ * 3. Custom — wire up your own auth flow (social auth, PIN, etc.).
+ *    Uncomment the customStrategy and implement your authorize function.
  */
-export const authStrategy: AuthStrategy = createBiometricStrategy({
-  requireFor: ['transfer', 'kyc', 'tns-write', 'wallet-delete'],
-  skipFor: ['balance', 'tns-read', 'exchange-rates', 'wallet-create', 'wallet-import'],
-});
 
-// --- Alternative: Password (silent fill) ---
-// import { createPasswordStrategy } from 'torosdk-expo/core';
-// export const authStrategy = createPasswordStrategy();
+// --- Option 1: Password (silent fill) ---
+export const authStrategy: AuthStrategy = createPasswordStrategy();
 
-// --- Alternative: Custom ---
-// import { createCustomStrategy } from 'torosdk-expo/core';
-// export const authStrategy = createCustomStrategy(async (operation) => {
+// --- Option 2: Biometric ---
+// export const authStrategy: AuthStrategy = createBiometricStrategy({
+//   requireFor: ['transfer', 'kyc', 'tns-write', 'wallet-delete'],
+//   skipFor: ['balance', 'tns-read', 'exchange-rates', 'wallet-create', 'wallet-import'],
+// });
+
+// --- Option 3: Custom ---
+// export const authStrategy: AuthStrategy = createCustomStrategy(async (operation) => {
+//   // Replace with your own auth logic (social auth, server-side check, etc.)
 //   console.log(`Authorizing operation: ${operation}`);
 //   return true;
 // });

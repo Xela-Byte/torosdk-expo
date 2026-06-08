@@ -17,7 +17,12 @@
       "infoPlist": {
         "NSFaceIDUsageDescription": "ToroSDK uses Face ID to authorize sensitive wallet operations like transfers, KYC checks, and TNS name registration.",
         "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": false
+          "NSAllowsArbitraryLoads": false,
+          "NSExceptionDomains": {
+            "testnet.toronet.org": {
+              "NSExceptionAllowsInsecureHTTPLoads": true
+            }
+          }
         }
       },
       "bundleIdentifier": "com.xelabyte.example"

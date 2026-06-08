@@ -104,7 +104,7 @@ export default function HomeScreen({ navigation }: any) {
           {balances.data?.map((b) => (
             <View key={b.currency} style={styles.balanceCard}>
               <Text style={styles.currencyLabel}>{b.currency}</Text>
-              <Text style={styles.balanceAmount}>{b.balance}</Text>
+              <Text style={styles.balanceAmount}>{b.balance || '0'}</Text>
             </View>
           ))}
         </View>
