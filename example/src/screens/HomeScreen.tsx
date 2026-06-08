@@ -1,20 +1,33 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import {
   View, Text, StyleSheet, FlatList,
   ScrollView, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useWallets, useBalances } from 'torosdk-expo';
+import { useAuth } from '../context/AuthGate';
 import type { RootStackParamList } from '../../App';
 
 type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
 
 export default function HomeScreen({ navigation }: { navigation: HomeNav }) {
+  const auth = useAuth();
   const wallets = useWallets();
   const balances = useBalances({
     address: wallets.active ?? '',
     enabled: !!wallets.active,
   });
+
+  // Logout button in header
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={auth.lock} style={styles.logoutButton}>
+          <Text style={styles.logoutText}>Logout</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, auth.lock]);
 
   if (wallets.isLoading) {
     return (
@@ -57,16 +70,33 @@ export default function HomeScreen({ navigation }: { navigation: HomeNav }) {
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
       {/* Active wallet display */}
       <View style={styles.walletCard}>
-        <Text style={styles.walletLabel}>Active Wallet</Text>
-        <Text style={styles.walletAddr} numberOfLines={1}>
-          {wallets.active.slice(0, 14)}...{wallets.active.slice(-8)}
-        </Text>
+        <View style={styles.walletCardTop}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.walletLabel}>Active Wallet</Text>
+            <Text style={styles.walletAddr} numberOfLines={1}>
+              {wallets.active.slice(0, 14)}...{wallets.active.slice(-8)}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.manageButton}
+            onPress={() => navigation.navigate('CreateWallet')}
+          >
+            <Text style={styles.manageButtonText}>Manage</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Wallet switcher */}
-      {wallets.all.length > 1 && (
-        <View style={styles.switcherSection}>
-          <Text style={styles.sectionTitle}>Switch Wallet</Text>
+      {/* Wallet switcher / management */}
+      <View style={styles.switcherSection}>
+        <Text style={styles.sectionTitle}>Wallets</Text>
+        {wallets.all.length <= 1 ? (
+          <TouchableOpacity
+            style={styles.addWalletButton}
+            onPress={() => navigation.navigate('CreateWallet')}
+          >
+            <Text style={styles.addWalletText}>+ Add or switch wallet</Text>
+          </TouchableOpacity>
+        ) : (
           <FlatList
             horizontal
             data={wallets.all}
@@ -91,9 +121,17 @@ export default function HomeScreen({ navigation }: { navigation: HomeNav }) {
               </TouchableOpacity>
             )}
             showsHorizontalScrollIndicator={false}
+            ListFooterComponent={
+              <TouchableOpacity
+                style={styles.manageChip}
+                onPress={() => navigation.navigate('CreateWallet')}
+              >
+                <Text style={styles.manageChipText}>Manage</Text>
+              </TouchableOpacity>
+            }
           />
-        </View>
-      )}
+        )}
+      </View>
 
       {/* Balances */}
       <Text style={styles.sectionTitle}>Balances</Text>
@@ -125,14 +163,44 @@ const styles = StyleSheet.create({
   ctaButton: { backgroundColor: '#e94560', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 8 },
   ctaText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   walletCard: { backgroundColor: '#0f3460', padding: 16, borderRadius: 12, marginBottom: 16 },
+  walletCardTop: { flexDirection: 'row', alignItems: 'center' },
   walletLabel: { color: '#aaa', fontSize: 12, textTransform: 'uppercase' },
   walletAddr: { color: '#4ecca3', fontSize: 16, fontWeight: 'bold', marginTop: 4, fontFamily: 'monospace' },
+  manageButton: {
+    backgroundColor: '#e94560',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  manageButtonText: { color: '#fff', fontWeight: 'bold', fontSize: 13 },
   switcherSection: { marginBottom: 16 },
   sectionTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 },
+  addWalletButton: {
+    backgroundColor: '#0f3460',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#1a5276',
+    borderStyle: 'dashed' as any,
+    alignItems: 'center',
+  },
+  addWalletText: { color: '#e94560', fontWeight: '600', fontSize: 14 },
   walletChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, backgroundColor: '#0f3460', marginRight: 8 },
   walletChipActive: { backgroundColor: '#e94560' },
   walletChipText: { color: '#aaa', fontSize: 13, fontFamily: 'monospace' },
   walletChipTextActive: { color: '#fff' },
+  manageChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#e94560',
+  },
+  manageChipText: { color: '#e94560', fontWeight: '600', fontSize: 13 },
+  logoutButton: { paddingHorizontal: 8, paddingVertical: 4 },
+  logoutText: { color: '#e94560', fontWeight: '600', fontSize: 14 },
   balanceGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   balanceCard: { backgroundColor: '#0f3460', borderRadius: 10, padding: 14, width: '47%' as any, marginBottom: 4 },
   currencyLabel: { color: '#aaa', fontSize: 14 },

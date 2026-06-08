@@ -43,6 +43,24 @@ export default function CreateWalletScreen({ navigation }: { navigation: CreateW
     }
   };
 
+  const handleSwitch = (address: string) => {
+    if (address === wallets.active) {
+      Alert.alert('Already Active', 'This wallet is already the active one.');
+      return;
+    }
+    Alert.alert(
+      'Switch Wallet',
+      `Make ${address.slice(0, 10)}... the active wallet?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Switch',
+          onPress: () => wallets.switchWallet(address),
+        },
+      ],
+    );
+  };
+
   const handleDelete = (address: string) => {
     Alert.alert('Delete Wallet', `Remove ${address.slice(0, 10)}...?`, [
       { text: 'Cancel', style: 'cancel' },
@@ -151,10 +169,23 @@ export default function CreateWalletScreen({ navigation }: { navigation: CreateW
           <Text style={styles.sectionTitle}>Stored Wallets</Text>
           {wallets.all.map((addr) => (
             <View key={addr} style={styles.walletRow}>
-              <Text style={styles.walletAddr}>{addr.slice(0, 10)}...{addr.slice(-6)}</Text>
-              <TouchableOpacity onPress={() => handleDelete(addr)}>
-                <Text style={styles.deleteText}>Delete</Text>
-              </TouchableOpacity>
+              <Text style={styles.walletAddr} numberOfLines={1}>
+                {addr.slice(0, 10)}...{addr.slice(-6)}
+                {addr === wallets.active ? (
+                  <Text style={styles.activeBadge}>  (active)</Text>
+                ) : null}
+              </Text>
+              <View style={styles.walletActions}>
+                <TouchableOpacity
+                  style={styles.switchButton}
+                  onPress={() => handleSwitch(addr)}
+                >
+                  <Text style={styles.switchText}>Switch</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(addr)}>
+                  <Text style={styles.deleteText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           ))}
         </View>
@@ -178,7 +209,16 @@ const styles = StyleSheet.create({
   existingSection: { marginTop: 32 },
   sectionTitle: { color: '#fff', fontSize: 16, fontWeight: 'bold', marginBottom: 12 },
   walletRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#0f3460', padding: 14, borderRadius: 8, marginBottom: 8 },
-  walletAddr: { color: '#fff', fontSize: 14 },
+  walletAddr: { color: '#fff', fontSize: 14, flex: 1 },
+  activeBadge: { color: '#4ecca3', fontSize: 12, fontWeight: 'bold' },
+  walletActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  switchButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: '#4ecca3',
+  },
+  switchText: { color: '#16213e', fontWeight: 'bold', fontSize: 13 },
   deleteText: { color: '#e94560', fontWeight: 'bold' },
   errorText: { color: '#e94560', marginTop: 8 },
 });

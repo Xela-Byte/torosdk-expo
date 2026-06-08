@@ -52,6 +52,8 @@
 	</dict>
 	<key>NSFaceIDUsageDescription</key>
 	<string>ToroSDK uses Face ID to authorize sensitive wallet operations like transfers, KYC checks, and TNS name registration.</string>
+	<key>RCTNewArchEnabled</key>
+	<true/>
 	<key>UILaunchStoryboardName</key>
 	<string>SplashScreen</string>
 	<key>UIRequiredDeviceCapabilities</key>
