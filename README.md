@@ -727,6 +727,27 @@ Passwords are stored in the OS keystore, not in env vars, AsyncStorage, or app c
 
 ---
 
+## Ecosystem
+
+torosdk-expo is part of the Toronet developer ecosystem:
+
+| Project | Description |
+|---------|-------------|
+| [torosdk](https://github.com/toroforge/torosdk) | Core TypeScript SDK for Toronet blockchain operations |
+| [torosdk-expo](https://github.com/toroforge/torosdk-expo) | Expo/React Native wrapper (this package) |
+| [Toronet Docs](https://docs.toronet.org) | Official Toronet documentation and API reference |
+| [Toronet Explorer](https://explorer.toronet.org) | Block explorer — view transactions, addresses, and blocks |
+| [Toronet Discord](https://discord.gg/toronet) | Community support, announcements, and developer chat |
+| [example/](https://github.com/toroforge/torosdk-expo/tree/main/example) | Full 6-screen demo app with PIN auth and biometric unlock |
+
+Additional project resources:
+
+- **[API Reference](API_REFERENCE.md)** — Single-page reference for all 12 SDK functions, 7 React hooks, error classes, auth strategies, and query keys
+- **[Architecture Guide](ARCHITECTURE.md)** — Deep dive into all 6 design decisions (TanStack Query, strategy pattern, Core/React separation, native transport, subpath exports, error hierarchy)
+- **[Migration Guide](MIGRATION_GUIDE.md)** — Step-by-step migration from bare React Native (torosdk) to Expo (torosdk-expo)
+
+---
+
 ## State of the package
 
 All 12 hooks are implemented (8 queries + 4 mutations), along with 12 core SDK wrappers, the CLI init tool, and a structured error hierarchy. The test suite covers 8 suites with 55 passing tests and zero TypeScript errors. Subpath exports work for tree-shaking. There's a complete example Expo SDK 52 app in `example/`.
