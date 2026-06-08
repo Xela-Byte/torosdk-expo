@@ -3,9 +3,13 @@ import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, Alert, ActivityIndicator, ScrollView,
 } from 'react-native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useCreateWallet, useImportWallet, useDeleteWallet, useWallets } from 'torosdk-expo';
+import type { RootStackParamList } from '../../App';
 
-export default function CreateWalletScreen({ navigation }: any) {
+type CreateWalletNav = NativeStackNavigationProp<RootStackParamList, 'CreateWallet'>;
+
+export default function CreateWalletScreen({ navigation }: { navigation: CreateWalletNav }) {
   const wallets = useWallets();
   const createWallet = useCreateWallet();
   const importWallet = useImportWallet();

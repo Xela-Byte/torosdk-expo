@@ -32,6 +32,7 @@
     "build": "tsc && cp -r src/cli/templates dist/cli/",
     "test": "jest --passWithNoTests",
     "test:watch": "jest --watch",
+    "test:integration": "RUN_INTEGRATION=1 jest --testPathPattern='integration/' --passWithNoTests",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/"
   },
@@ -49,7 +50,7 @@
     "expo-local-authentication": ">=14.0.0",
     "expo-secure-store": ">=12.0.0",
     "react": ">=18.0.0",
-    "react-native": "*"
+    "react-native": ">=0.73.0"
   },
   "peerDependenciesMeta": {
     "expo-local-authentication": {

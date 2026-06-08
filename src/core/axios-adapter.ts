@@ -156,6 +156,9 @@ function buildRawHttpRequest(config: InternalAxiosRequestConfig): {
   return { host, port, useTls, httpRequest };
 }
 
+/** Module-level debug flag — set by {@link setupAxiosAdapter}. */
+let _debug = false;
+
 /**
  * Activate the custom adapter.
  *
@@ -171,19 +174,25 @@ function buildRawHttpRequest(config: InternalAxiosRequestConfig): {
  * routes GET+body requests through NWConnection (raw TCP+TLS), which
  * bypasses CFNetwork's Darwin 25 restriction on GET+body.
  *
+ * @param debug - When `true`, transport selection and request/response
+ *   traces are logged to the console.  Off by default.
+ *
  * @internal — exported for testing; users should rely on `createConfig`.
  */
-export function setupAxiosAdapter(): void {
+export function setupAxiosAdapter(debug?: boolean): void {
+  _debug = debug === true;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fallbackAdapter = axios.defaults.adapter as any;
   // Resolve native module lazily — NOT at import time (see getNativeRawRequest JSDoc)
   const nativeRawRequest = getNativeRawRequest();
-  console.log(
-    '[torosdk-expo:adapter] setupAxiosAdapter() called',
-    '— XHR available:', !!_XHR,
-    'nativeRawRequest available:', !!nativeRawRequest,
-    'fallbackAdapter:', typeof fallbackAdapter,
-  );
+  if (_debug) {
+    console.log(
+      '[torosdk-expo:adapter] setupAxiosAdapter() called',
+      '— XHR available:', !!_XHR,
+      'nativeRawRequest available:', !!nativeRawRequest,
+      'fallbackAdapter:', typeof fallbackAdapter,
+    );
+  }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   axios.defaults.adapter = async function customAdapter(
@@ -191,21 +200,23 @@ export function setupAxiosAdapter(): void {
   ): Promise<any> {
     // Only intercept GET requests that carry a body
     if (config.method?.toLowerCase() === 'get' && config.data != null) {
-      console.log(
-        '[torosdk-expo:adapter] INTERCEPTING GET+body:',
-        config.url,
-        'data len:',
-        typeof config.data === 'string'
-          ? config.data.length
-          : JSON.stringify(config.data).length,
-        'nativeRaw:', !!nativeRawRequest,
-      );
+      if (_debug) {
+        console.log(
+          '[torosdk-expo:adapter] INTERCEPTING GET+body:',
+          config.url,
+          'data len:',
+          typeof config.data === 'string'
+            ? config.data.length
+            : JSON.stringify(config.data).length,
+          'nativeRaw:', !!nativeRawRequest,
+        );
+      }
 
       // ── Native NWConnection path (iOS, bypasses CFNetwork) ──────
       if (nativeRawRequest) {
         try {
           const raw = buildRawHttpRequest(config);
-          console.log('[torosdk-expo:adapter] → using native NWConnection to', raw.host, ':', raw.port);
+          if (_debug) console.log('[torosdk-expo:adapter] → using native NWConnection to', raw.host, ':', raw.port);
           // Race native request against a timeout so a hung connection
           // doesn't block the fallback path forever.
           const result = await (Promise.race([
@@ -214,7 +225,7 @@ export function setupAxiosAdapter(): void {
               setTimeout(() => reject(new Error('native request timed out')), 30_000),
             ),
           ]) as Promise<RawRequestResult>);
-          console.log('[torosdk-expo:adapter] ← native response status:', result.statusCode);
+          if (_debug) console.log('[torosdk-expo:adapter] ← native response status:', result.statusCode);
 
           // Parse response body
           let responseData: unknown = result.body;
@@ -404,7 +415,7 @@ export function setupAxiosAdapter(): void {
     }
 
     // --- all other requests use the original adapter chain ---
-    console.log('[torosdk-expo:adapter] BYPASS for', config.method, config.url, '(no GET+body)');
+    if (_debug) console.log('[torosdk-expo:adapter] BYPASS for', config.method, config.url, '(no GET+body)');
     const adapter =
       typeof fallbackAdapter === 'function'
         ? fallbackAdapter

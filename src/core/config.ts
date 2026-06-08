@@ -37,7 +37,7 @@ export function createConfig(config: ToronetConfig): ToronetConfig {
 
   // Patch axios BEFORE any torosdk calls so GET+body requests use
   // XHR instead of fetch (which throws on GET+body per spec).
-  setupAxiosAdapter();
+  setupAxiosAdapter(config.debug);
 
   // Initialize the underlying torosdk so its network calls use the
   // correct API endpoint (testnet vs mainnet).

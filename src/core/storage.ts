@@ -35,6 +35,11 @@ export async function getPassword(address: string): Promise<string | null> {
  * @throws {@link StorageError} if the underlying SecureStore write fails.
  */
 export async function setPassword(address: string, password: string): Promise<void> {
+  if (!password || password.trim().length === 0) {
+    throw new StorageError(
+      `Cannot store an empty password for ${address}. Passwords must be non-empty strings.`,
+    );
+  }
   try {
     await SecureStore.setItemAsync(passwordKey(address), password);
   } catch (err) {

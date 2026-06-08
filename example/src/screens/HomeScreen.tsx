@@ -3,9 +3,13 @@ import {
   View, Text, StyleSheet, FlatList,
   ScrollView, TouchableOpacity, ActivityIndicator,
 } from 'react-native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useWallets, useBalances } from 'torosdk-expo';
+import type { RootStackParamList } from '../../App';
 
-export default function HomeScreen({ navigation }: any) {
+type HomeNav = NativeStackNavigationProp<RootStackParamList, 'Home'>;
+
+export default function HomeScreen({ navigation }: { navigation: HomeNav }) {
   const wallets = useWallets();
   const balances = useBalances({
     address: wallets.active ?? '',

@@ -22,6 +22,11 @@ export interface ToronetConfig {
   network: ToronetNetwork;
   /** Optional: override the default API base URL */
   apiBaseUrl?: string;
+  /**
+   * Enable verbose debug logging (adapter transport selection, request/response
+   * traces, etc.).  Off by default — turn on only during development.
+   */
+  debug?: boolean;
 }
 
 /**

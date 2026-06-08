@@ -3,7 +3,7 @@ module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/__tests__'],
-  testPathIgnorePatterns: ['/__mocks__/', '/types/'],
+  testPathIgnorePatterns: ['/__mocks__/', '/types/', '/integration/'],
   moduleNameMapper: {
     '^react-native$': '<rootDir>/__tests__/__mocks__/react-native.ts',
     '^torosdk-expo$': '<rootDir>/src/react/index.ts',
