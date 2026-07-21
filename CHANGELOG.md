@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-07-21
+
 ### Added
 - **Cross-chain Bridge coverage.** Core wrappers `bridgeToken`, `getBridgeTokenFee`, `getBridgeBalance`, `getBridgeTokenBalance`, `getBridgeTransactions`, `getBridgeTokenTransactions`, and matching hooks (`useBridgeToken`, `useBridgeTokenFee`, `useBridgeBalance`, `useBridgeTokenBalance`, `useBridgeTransactions`, `useBridgeTokenTransactions`). Re-exports the `BridgeNetwork` enum (Solana, Base, Polygon, BSC, Arbitrum, Ethereum).
 - **Solana coverage.** Core wrappers `createSolanaAddress`, `createToronetSolanaAddress`, `isValidSolanaAddress`, `transferSolana`, `transferSolToken`, `getSolBalance`, `getSolTokenBalance`, `getSolTransactions`, `getSolTokenTransactions`, and matching hooks (`useCreateSolanaAddress`, `useCreateToronetSolanaAddress`, `useTransferSolana`, `useTransferSolToken`, `useSolBalance`, `useSolTokenBalance`, `useSolTransactions`, `useSolTokenTransactions`).
