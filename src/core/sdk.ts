@@ -1,8 +1,9 @@
 import * as torosdk from 'torosdk';
-import { Currency } from 'torosdk';
+import { Currency, BridgeNetwork } from 'torosdk';
+import type { SwapRateOutput } from 'torosdk';
 import { getPassword, setPassword } from './storage';
 import { getAuthStrategy } from './auth';
-import type { OperationCategory } from './types';
+import type { OperationCategory, ToroRawResult } from './types';
 import { NetworkError, APIError } from './errors';
 
 // --- Internal helpers ---
@@ -411,6 +412,494 @@ export async function getExchangeRates(): Promise<
       }));
     }
     return [];
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+// --- Bridge (cross-chain) ---
+
+/**
+ * Parameters for a cross-chain token bridge operation.
+ *
+ * @property from - The Toronet wallet address initiating the bridge.
+ * @property network - Destination chain ({@link BridgeNetwork} or its string code).
+ * @property contractAddress - The token contract address on the target chain.
+ * @property tokenName - The token symbol/name being bridged.
+ * @property amount - Amount to bridge, as a decimal string.
+ */
+export interface BridgeTokenParams {
+  from: string;
+  network: BridgeNetwork | string;
+  contractAddress: string;
+  tokenName: string;
+  amount: string;
+}
+
+/**
+ * Bridge tokens from Toronet to another chain (Solana, Base, Polygon, BSC,
+ * Arbitrum, Ethereum).
+ *
+ * @remarks
+ * This is a **sensitive operation** — it requires auth gating (`'bridge'`)
+ * AND the sender's stored wallet password, both resolved via
+ * {@link resolvePassword}. The destination chain is selected with
+ * {@link BridgeNetwork}.
+ *
+ * @param params - The {@link BridgeTokenParams} describing the bridge.
+ * @returns The raw bridge result from the Toronet API.
+ * @throws {@link AuthBlockedError} if auth is denied or no password is stored.
+ * @throws {@link NetworkError} | {@link APIError} on network failure.
+ *
+ * @example
+ * ```ts
+ * await bridgeToken({
+ *   from: '0xSender',
+ *   network: BridgeNetwork.Base,
+ *   contractAddress: '0xToken',
+ *   tokenName: 'USDC',
+ *   amount: '25',
+ * });
+ * ```
+ */
+export async function bridgeToken(params: BridgeTokenParams): Promise<ToroRawResult> {
+  try {
+    const pwd = await resolvePassword(params.from, 'bridge');
+    return await torosdk.bridgeTokenFromChain(params.network, {
+      from: params.from,
+      pwd,
+      network: params.network,
+      contractaddress: params.contractAddress,
+      tokenname: params.tokenName,
+      amount: params.amount,
+    });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Estimate the fee for bridging a token to a given chain.
+ *
+ * @remarks
+ * Read-only — passes through the `'bridge-read'` auth gate.
+ *
+ * @param params - Target `network`, token `contractAddress`, and `amount`.
+ * @returns The raw fee-estimate result from the Toronet API.
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ */
+export async function getBridgeTokenFee(params: {
+  network: BridgeNetwork | string;
+  contractAddress: string;
+  amount: string;
+}): Promise<ToroRawResult> {
+  try {
+    await authorizeOperation('bridge-read');
+    return await torosdk.getBridgeTokenFeeEstimate(params.network, {
+      network: params.network,
+      contractaddress: params.contractAddress,
+      amount: params.amount,
+    });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Fetch the native-asset balance of an address on a bridged chain.
+ *
+ * @remarks
+ * Read-only — passes through the `'bridge-read'` auth gate.
+ *
+ * @param params - The `address` to query and target `network`.
+ * @returns The raw balance result from the Toronet API.
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ */
+export async function getBridgeBalance(params: {
+  address: string;
+  network: BridgeNetwork | string;
+}): Promise<ToroRawResult> {
+  try {
+    await authorizeOperation('bridge-read');
+    return await torosdk.getBridgeBalance(params.network, {
+      address: params.address,
+      network: params.network,
+    });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Fetch a token balance for an address on a bridged chain.
+ *
+ * @remarks
+ * Read-only — passes through the `'bridge-read'` auth gate.
+ *
+ * @param params - `address`, target `network`, token `contractAddress`, and
+ *   optional `tokenName`.
+ * @returns The raw token-balance result from the Toronet API.
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ */
+export async function getBridgeTokenBalance(params: {
+  address: string;
+  network: BridgeNetwork | string;
+  contractAddress: string;
+  tokenName?: string;
+}): Promise<ToroRawResult> {
+  try {
+    await authorizeOperation('bridge-read');
+    return await torosdk.getBridgeTokenBalance(params.network, {
+      address: params.address,
+      network: params.network,
+      contractaddress: params.contractAddress,
+      tokenname: params.tokenName,
+    });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Fetch the native-asset transaction history for an address on a bridged chain.
+ *
+ * @remarks
+ * Read-only — passes through the `'bridge-read'` auth gate.
+ *
+ * @param params - The `address` to query and target `network`.
+ * @returns The raw transactions result from the Toronet API.
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ */
+export async function getBridgeTransactions(params: {
+  address: string;
+  network: BridgeNetwork | string;
+}): Promise<ToroRawResult> {
+  try {
+    await authorizeOperation('bridge-read');
+    return await torosdk.getBridgeTransactions(params.network, {
+      address: params.address,
+      network: params.network,
+    });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Fetch token transaction history for an address on a bridged chain.
+ *
+ * @remarks
+ * Read-only — passes through the `'bridge-read'` auth gate.
+ *
+ * @param params - `address`, target `network`, token `contractAddress`, and
+ *   optional `tokenName`.
+ * @returns The raw token-transactions result from the Toronet API.
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ */
+export async function getBridgeTokenTransactions(params: {
+  address: string;
+  network: BridgeNetwork | string;
+  contractAddress: string;
+  tokenName?: string;
+}): Promise<ToroRawResult> {
+  try {
+    await authorizeOperation('bridge-read');
+    return await torosdk.getBridgeTokenTransactions(params.network, {
+      address: params.address,
+      network: params.network,
+      contractaddress: params.contractAddress,
+      tokenname: params.tokenName,
+    });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+// --- Solana ---
+
+/**
+ * Create a new standalone Solana address.
+ *
+ * @remarks
+ * Passes through the `'wallet-create'` auth gate.
+ *
+ * @returns The raw creation result from the Toronet API (includes the new address).
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ */
+export async function createSolanaAddress(): Promise<ToroRawResult> {
+  try {
+    await authorizeOperation('wallet-create');
+    return await torosdk.createSolanaAddress();
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Create a Toronet-managed Solana address bound to an existing wallet.
+ *
+ * @remarks
+ * **Sensitive** — requires auth gating (`'wallet-create'`) AND the wallet's
+ * stored password, resolved via {@link resolvePassword}.
+ *
+ * @param address - The Toronet wallet address to bind the Solana address to.
+ * @returns The raw creation result from the Toronet API.
+ * @throws {@link AuthBlockedError} if auth is denied or no password is stored.
+ * @throws {@link NetworkError} | {@link APIError} on network failure.
+ */
+export async function createToronetSolanaAddress(address: string): Promise<ToroRawResult> {
+  try {
+    const pwd = await resolvePassword(address, 'wallet-create');
+    return await torosdk.createToronetSolanaAddress({ addr: address, pwd });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Check whether a string is a valid Solana address.
+ *
+ * @param address - The address to validate.
+ * @returns The raw validation result from the Toronet API.
+ * @throws {@link NetworkError} | {@link APIError} on network failure.
+ */
+export async function isValidSolanaAddress(address: string): Promise<ToroRawResult> {
+  try {
+    return await torosdk.isValidSolanaAddress(address);
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Transfer native SOL between addresses.
+ *
+ * @remarks
+ * **Sensitive** — requires auth gating (`'solana-transfer'`) AND the sender's
+ * stored wallet password, resolved via {@link resolvePassword}.
+ *
+ * @param params - `from`, `to`, and `amount` (decimal string).
+ * @returns The raw transfer result from the Toronet API.
+ * @throws {@link AuthBlockedError} if auth is denied or no password is stored.
+ * @throws {@link NetworkError} | {@link APIError} on network failure.
+ */
+export async function transferSolana(params: {
+  from: string;
+  to: string;
+  amount: string;
+}): Promise<ToroRawResult> {
+  try {
+    const pwd = await resolvePassword(params.from, 'solana-transfer');
+    return await torosdk.transferSolana({
+      from: params.from,
+      to: params.to,
+      amount: params.amount,
+      pwd,
+    });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Transfer an SPL token on Solana.
+ *
+ * @remarks
+ * **Sensitive** — requires auth gating (`'solana-transfer'`) AND the sender's
+ * stored wallet password, resolved via {@link resolvePassword}.
+ *
+ * @param params - `from`, `to`, `amount`, token `contractAddress`, `tokenName`,
+ *   and optional `useTokenAsFees` flag.
+ * @returns The raw transfer result from the Toronet API.
+ * @throws {@link AuthBlockedError} if auth is denied or no password is stored.
+ * @throws {@link NetworkError} | {@link APIError} on network failure.
+ */
+export async function transferSolToken(params: {
+  from: string;
+  to: string;
+  amount: string;
+  contractAddress: string;
+  tokenName: string;
+  useTokenAsFees?: string;
+}): Promise<ToroRawResult> {
+  try {
+    const pwd = await resolvePassword(params.from, 'solana-transfer');
+    return await torosdk.transferSolToken({
+      from: params.from,
+      to: params.to,
+      amount: params.amount,
+      pwd,
+      contractaddress: params.contractAddress,
+      tokenname: params.tokenName,
+      usetokenasfees: params.useTokenAsFees,
+    });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Fetch the native SOL balance for an address.
+ *
+ * @remarks
+ * Read-only — passes through the `'solana-read'` auth gate.
+ *
+ * @param params - The `address` to query and optional `network`.
+ * @returns The raw balance result from the Toronet API.
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ */
+export async function getSolBalance(params: {
+  address: string;
+  network?: BridgeNetwork | string;
+}): Promise<ToroRawResult> {
+  try {
+    await authorizeOperation('solana-read');
+    return await torosdk.getSolBalance({ address: params.address, network: params.network });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Fetch an SPL token balance for an address.
+ *
+ * @remarks
+ * Read-only — passes through the `'solana-read'` auth gate.
+ *
+ * @param params - `address`, token `contractAddress`, optional `tokenName` and `network`.
+ * @returns The raw token-balance result from the Toronet API.
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ */
+export async function getSolTokenBalance(params: {
+  address: string;
+  contractAddress: string;
+  tokenName?: string;
+  network?: BridgeNetwork | string;
+}): Promise<ToroRawResult> {
+  try {
+    await authorizeOperation('solana-read');
+    return await torosdk.getSolTokenBalance({
+      address: params.address,
+      contractaddress: params.contractAddress,
+      tokenname: params.tokenName,
+      network: params.network,
+    });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Fetch native SOL transaction history for an address.
+ *
+ * @remarks
+ * Read-only — passes through the `'solana-read'` auth gate.
+ *
+ * @param params - The `address` to query and optional `network`.
+ * @returns The raw transactions result from the Toronet API.
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ */
+export async function getSolTransactions(params: {
+  address: string;
+  network?: BridgeNetwork | string;
+}): Promise<ToroRawResult> {
+  try {
+    await authorizeOperation('solana-read');
+    return await torosdk.getSolTransactions({ address: params.address, network: params.network });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Fetch SPL token transaction history for an address.
+ *
+ * @remarks
+ * Read-only — passes through the `'solana-read'` auth gate.
+ *
+ * @param params - `address`, token `contractAddress`, optional `tokenName` and `network`.
+ * @returns The raw token-transactions result from the Toronet API.
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ */
+export async function getSolTokenTransactions(params: {
+  address: string;
+  contractAddress: string;
+  tokenName?: string;
+  network?: BridgeNetwork | string;
+}): Promise<ToroRawResult> {
+  try {
+    await authorizeOperation('solana-read');
+    return await torosdk.getSolTokenTransactions({
+      address: params.address,
+      contractaddress: params.contractAddress,
+      tokenname: params.tokenName,
+      network: params.network,
+    });
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+// --- Swap ---
+
+/**
+ * Preview a currency swap — how much you'll receive and at what rate — before
+ * executing.
+ *
+ * @remarks
+ * Read-only — passes through the `'swap-read'` auth gate.
+ *
+ * @param params - `fromCurrency`, `toCurrency`, and `amount` (number).
+ * @returns A typed {@link SwapRateOutput} with the converted amount and rate.
+ * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
+ *
+ * @example
+ * ```ts
+ * const quote = await getSwapQuote({ fromCurrency: 'naira', toCurrency: 'dollar', amount: 1000 });
+ * console.log(quote.convertedAmount, quote.rate);
+ * ```
+ */
+export async function getSwapQuote(params: {
+  fromCurrency: string;
+  toCurrency: string;
+  amount: number;
+}): Promise<SwapRateOutput> {
+  try {
+    await authorizeOperation('swap-read');
+    return await torosdk.getSwapQuote(params);
+  } catch (err) {
+    wrapError(err);
+  }
+}
+
+/**
+ * Execute a currency swap for a wallet.
+ *
+ * @remarks
+ * **Sensitive** — requires auth gating (`'swap'`) AND the client wallet's
+ * stored password, resolved via {@link resolvePassword}.
+ *
+ * @param params - `fromCurrency`, `toCurrency`, `amount` (number), and the
+ *   `client` wallet address whose stored password authorizes the swap.
+ * @returns The raw swap result from the Toronet API.
+ * @throws {@link AuthBlockedError} if auth is denied or no password is stored.
+ * @throws {@link NetworkError} | {@link APIError} on network failure.
+ */
+export async function executeSwap(params: {
+  fromCurrency: string;
+  toCurrency: string;
+  amount: number;
+  client: string;
+}): Promise<ToroRawResult> {
+  try {
+    const pwd = await resolvePassword(params.client, 'swap');
+    return await torosdk.swapCurrency({
+      fromCurrency: params.fromCurrency,
+      toCurrency: params.toCurrency,
+      amount: params.amount,
+      client: params.client,
+      clientPassword: pwd,
+    });
   } catch (err) {
     wrapError(err);
   }

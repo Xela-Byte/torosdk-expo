@@ -30,8 +30,8 @@
  */
 
 // Types
-export type { ToronetConfig, ToronetNetwork, OperationCategory } from './types';
-export { Currency } from './types';
+export type { ToronetConfig, ToronetNetwork, OperationCategory, ToroRawResult } from './types';
+export { Currency, BridgeNetwork } from './types';
 
 // Errors
 export {
@@ -85,4 +85,25 @@ export {
   getKYCStatus,
   submitKYC,
   getExchangeRates,
+  // Bridge (cross-chain)
+  bridgeToken,
+  getBridgeTokenFee,
+  getBridgeBalance,
+  getBridgeTokenBalance,
+  getBridgeTransactions,
+  getBridgeTokenTransactions,
+  // Solana
+  createSolanaAddress,
+  createToronetSolanaAddress,
+  isValidSolanaAddress,
+  transferSolana,
+  transferSolToken,
+  getSolBalance,
+  getSolTokenBalance,
+  getSolTransactions,
+  getSolTokenTransactions,
+  // Swap
+  getSwapQuote,
+  executeSwap,
 } from './sdk';
+export type { BridgeTokenParams } from './sdk';

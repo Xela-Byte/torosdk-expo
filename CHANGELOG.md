@@ -8,12 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Cross-chain Bridge coverage.** Core wrappers `bridgeToken`, `getBridgeTokenFee`, `getBridgeBalance`, `getBridgeTokenBalance`, `getBridgeTransactions`, `getBridgeTokenTransactions`, and matching hooks (`useBridgeToken`, `useBridgeTokenFee`, `useBridgeBalance`, `useBridgeTokenBalance`, `useBridgeTransactions`, `useBridgeTokenTransactions`). Re-exports the `BridgeNetwork` enum (Solana, Base, Polygon, BSC, Arbitrum, Ethereum).
+- **Solana coverage.** Core wrappers `createSolanaAddress`, `createToronetSolanaAddress`, `isValidSolanaAddress`, `transferSolana`, `transferSolToken`, `getSolBalance`, `getSolTokenBalance`, `getSolTransactions`, `getSolTokenTransactions`, and matching hooks (`useCreateSolanaAddress`, `useCreateToronetSolanaAddress`, `useTransferSolana`, `useTransferSolToken`, `useSolBalance`, `useSolTokenBalance`, `useSolTransactions`, `useSolTokenTransactions`).
+- **Currency swap coverage.** Core wrappers `getSwapQuote` and `executeSwap`, plus `useSwapQuote` and `useSwap` hooks.
+- New `OperationCategory` values (`bridge`, `bridge-read`, `swap`, `swap-read`, `solana-transfer`, `solana-read`) so auth strategies can gate the new operations.
+- `ToroRawResult` type documenting the raw Toronet response envelope returned by bridge/Solana/swap endpoints.
 - `ToronetConfig.debug` flag to gate verbose adapter logging (off by default).
 - `CHANGELOG.md` — this file.
 - `CONTRIBUTING.md` — local development and contribution guide.
 - CI/CD GitHub Actions workflow (`npm ci && typecheck && lint && test && build`).
 
 ### Changed
+- Bumped the `torosdk` dependency from `^0.2.0` to `^0.5.0` (Bridge, Solana, and swap functions require 0.5.x).
 - Tightened `react-native` peer dependency from `"*"` to `">=0.73.0"` (Expo 52 minimum).
 - All `console.log` calls in `axios-adapter.ts` are now gated behind `ToronetConfig.debug`.
 

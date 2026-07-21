@@ -191,6 +191,12 @@ function describeOperation(op: OperationCategory): string {
     'wallet-create': 'create a wallet',
     'wallet-import': 'import a wallet',
     'wallet-delete': 'delete a wallet',
+    bridge: 'bridge tokens across chains',
+    'bridge-read': 'view bridge balances',
+    swap: 'swap currencies',
+    'swap-read': 'view swap rates',
+    'solana-transfer': 'send on Solana',
+    'solana-read': 'view Solana balances',
   };
   return labels[op] ?? op;
 }

@@ -47,3 +47,45 @@ export { useKYCStatus, useSubmitKYC } from './hooks/useKYC';
 export type { UseKYCStatusOptions } from './hooks/useKYC';
 
 export { useExchangeRates } from './hooks/useExchangeRates';
+
+// Bridge (cross-chain)
+export {
+  useBridgeToken,
+  useBridgeTokenFee,
+  useBridgeBalance,
+  useBridgeTokenBalance,
+  useBridgeTransactions,
+  useBridgeTokenTransactions,
+} from './hooks/useBridge';
+export type {
+  BridgeTokenVariables,
+  UseBridgeTokenFeeOptions,
+  UseBridgeBalanceOptions,
+  UseBridgeTokenBalanceOptions,
+  UseBridgeTransactionsOptions,
+  UseBridgeTokenTransactionsOptions,
+} from './hooks/useBridge';
+
+// Solana
+export {
+  useCreateSolanaAddress,
+  useCreateToronetSolanaAddress,
+  useTransferSolana,
+  useTransferSolToken,
+  useSolBalance,
+  useSolTokenBalance,
+  useSolTransactions,
+  useSolTokenTransactions,
+} from './hooks/useSolana';
+export type {
+  TransferSolanaVariables,
+  TransferSolTokenVariables,
+  UseSolBalanceOptions,
+  UseSolTokenBalanceOptions,
+  UseSolTransactionsOptions,
+  UseSolTokenTransactionsOptions,
+} from './hooks/useSolana';
+
+// Swap
+export { useSwapQuote, useSwap } from './hooks/useSwap';
+export type { UseSwapQuoteOptions, SwapVariables } from './hooks/useSwap';

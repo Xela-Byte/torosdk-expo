@@ -26,6 +26,7 @@ The CLI detects your Expo project, installs dependencies (`torosdk`, `@tanstack/
 - **Biometric gates on sensitive operations.** Fingerprint or Face ID via `expo-local-authentication` before transfers, wallet deletion, KYC submissions — whichever operations you configure.
 - **Typed errors you can switch on.** `ToroError` base class with `NetworkError`, `APIError`, `AuthBlockedError`, and `StorageError` subclasses. Every error has a `code`, a `detail` string, and the original `cause`.
 - **TanStack Query v5 hooks.** `useBalance`, `useBalances`, `useTransfer`, `useWallets`, `useCreateWallet`, `useImportWallet`, `useDeleteWallet`, `useResolveTNS`, `useLookupTNS`, `useSetTNS`, `useKYCStatus`, `useSubmitKYC`, `useExchangeRates`. Mutations invalidate related queries automatically.
+- **Cross-chain, Solana, and swap coverage.** Bridge tokens to Base, Polygon, BSC, Arbitrum, Ethereum, or Solana (`useBridgeToken` + bridge balance/fee/transaction hooks); manage Solana addresses, transfers, and SPL tokens (`useTransferSolana`, `useSolBalance`, …); and quote or execute currency swaps (`useSwapQuote`, `useSwap`). Every one is auth-gated and error-normalized like the wallet hooks.
 - **Auth strategies you plug in.** Password (silent SecureStore fill), biometric (OS-level fingerprint / Face ID), or write your own with `createCustomStrategy`.
 - **Tree-shakeable subpath exports.** `torosdk-expo` for React hooks, `torosdk-expo/core` for zero-React environments, `torosdk-expo/cli` for the Node.js scaffold script. The CLI never ships to your app bundle.
 - **Full TypeScript.** Strict mode, declarations, declaration maps, source maps. No `any` escapes.
@@ -477,6 +478,104 @@ const { data, isLoading } = useExchangeRates();
 
 ---
 
+### Bridge (cross-chain)
+
+Move tokens between Toronet and Base, Polygon, BSC, Arbitrum, Ethereum, or Solana. Bridging is a sensitive operation: it resolves the sender's stored password and passes the `bridge` auth gate. Reads (balances, transactions, fee estimates) pass the `bridge-read` gate.
+
+```tsx
+import { useBridgeToken, useBridgeTokenFee, useBridgeTokenBalance } from 'torosdk-expo';
+import { BridgeNetwork } from 'torosdk-expo/core';
+
+// Preview the fee before bridging
+const { data: fee } = useBridgeTokenFee({
+  network: BridgeNetwork.Base,
+  contractAddress: '0xToken',
+  amount: '25',
+});
+
+// Bridge tokens to Base
+const bridge = useBridgeToken();
+await bridge.mutateAsync({
+  from: '0xSender',
+  network: BridgeNetwork.Base,
+  contractAddress: '0xToken',
+  tokenName: 'USDC',
+  amount: '25',
+});
+
+// Read a bridged token balance
+const { data } = useBridgeTokenBalance({
+  address: '0xSender',
+  network: BridgeNetwork.Base,
+  contractAddress: '0xToken',
+});
+```
+
+Also available: `useBridgeBalance`, `useBridgeTransactions`, `useBridgeTokenTransactions`. On a successful bridge, the sender's bridge balance queries for that network are invalidated automatically.
+
+---
+
+### Solana
+
+Create and manage Solana addresses, send native SOL, and transfer SPL tokens. Transfers pass the `solana-transfer` gate (with stored-password resolution); reads pass `solana-read`.
+
+```tsx
+import {
+  useCreateToronetSolanaAddress,
+  useTransferSolana,
+  useSolBalance,
+  useTransferSolToken,
+} from 'torosdk-expo';
+
+const create = useCreateToronetSolanaAddress();
+await create.mutateAsync('0xWallet'); // binds a Solana address to the wallet
+
+const sol = useTransferSolana();
+await sol.mutateAsync({ from: 'SoLFrom', to: 'SoLTo', amount: '1.5' });
+
+const { data: balance } = useSolBalance({ address: 'SoLAddr' });
+
+const token = useTransferSolToken();
+await token.mutateAsync({
+  from: 'SoLFrom',
+  to: 'SoLTo',
+  amount: '10',
+  contractAddress: 'MintAddr',
+  tokenName: 'USDC',
+});
+```
+
+Also available: `useCreateSolanaAddress`, `useSolTokenBalance`, `useSolTransactions`, `useSolTokenTransactions`.
+
+---
+
+### Swap
+
+Quote and execute currency swaps. `useSwapQuote` is a read (`swap-read` gate) returning the converted amount and rate; `useSwap` executes the swap (`swap` gate, resolves the client wallet's stored password).
+
+```tsx
+import { useSwapQuote, useSwap } from 'torosdk-expo';
+
+const { data: quote } = useSwapQuote({
+  fromCurrency: 'naira',
+  toCurrency: 'dollar',
+  amount: 1000,
+});
+// quote?.convertedAmount, quote?.rate
+
+const swap = useSwap();
+await swap.mutateAsync({
+  fromCurrency: 'naira',
+  toCurrency: 'dollar',
+  amount: 1000,
+  client: '0xWallet',
+});
+```
+
+On a successful swap, the client's balance queries are invalidated automatically.
+
+---
+
 ## Package structure
 
 | Entry point | Contains | How you import |
@@ -693,6 +792,23 @@ Every function handles password injection, auth gate checks, and error normaliza
 | `getKYCStatus` | `(address: string) => Promise<{ verified, details? }>` | `kyc` |
 | `submitKYC` | `(address: string, customerData: Record<string, unknown>) => Promise<unknown>` | `kyc` |
 | `getExchangeRates` | `() => Promise<Array<{ pair, rate }>>` | `exchange-rates` |
+| `bridgeToken` | `(params: BridgeTokenParams) => Promise<ToroRawResult>` | `bridge` |
+| `getBridgeTokenFee` | `({ network, contractAddress, amount }) => Promise<ToroRawResult>` | `bridge-read` |
+| `getBridgeBalance` | `({ address, network }) => Promise<ToroRawResult>` | `bridge-read` |
+| `getBridgeTokenBalance` | `({ address, network, contractAddress, tokenName? }) => Promise<ToroRawResult>` | `bridge-read` |
+| `getBridgeTransactions` | `({ address, network }) => Promise<ToroRawResult>` | `bridge-read` |
+| `getBridgeTokenTransactions` | `({ address, network, contractAddress, tokenName? }) => Promise<ToroRawResult>` | `bridge-read` |
+| `createSolanaAddress` | `() => Promise<ToroRawResult>` | `wallet-create` |
+| `createToronetSolanaAddress` | `(address: string) => Promise<ToroRawResult>` | `wallet-create` |
+| `isValidSolanaAddress` | `(address: string) => Promise<ToroRawResult>` | none |
+| `transferSolana` | `({ from, to, amount }) => Promise<ToroRawResult>` | `solana-transfer` |
+| `transferSolToken` | `({ from, to, amount, contractAddress, tokenName, useTokenAsFees? }) => Promise<ToroRawResult>` | `solana-transfer` |
+| `getSolBalance` | `({ address, network? }) => Promise<ToroRawResult>` | `solana-read` |
+| `getSolTokenBalance` | `({ address, contractAddress, tokenName?, network? }) => Promise<ToroRawResult>` | `solana-read` |
+| `getSolTransactions` | `({ address, network? }) => Promise<ToroRawResult>` | `solana-read` |
+| `getSolTokenTransactions` | `({ address, contractAddress, tokenName?, network? }) => Promise<ToroRawResult>` | `solana-read` |
+| `getSwapQuote` | `({ fromCurrency, toCurrency, amount }) => Promise<SwapRateOutput>` | `swap-read` |
+| `executeSwap` | `({ fromCurrency, toCurrency, amount, client }) => Promise<ToroRawResult>` | `swap` |
 
 ### Storage functions (`torosdk-expo/core`)
 

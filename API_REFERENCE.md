@@ -331,6 +331,72 @@ function getExchangeRates(): Promise<Array<{ pair: string; rate: string }>>;
 
 ---
 
+### Bridge wrappers (cross-chain)
+
+Move value between Toronet and external chains via `BridgeNetwork` (`Solana`, `Base`, `Polygon`, `BSC`, `Arbitrum`, `Ethereum`). All return `ToroRawResult` (the raw Toronet response envelope; narrow via its index signature).
+
+```ts
+interface BridgeTokenParams {
+  from: string;
+  network: BridgeNetwork | string;
+  contractAddress: string;
+  tokenName: string;
+  amount: string;
+}
+
+// Sensitive — resolves the sender's stored password. Auth gate: `bridge`.
+function bridgeToken(params: BridgeTokenParams): Promise<ToroRawResult>;
+
+// Reads. Auth gate: `bridge-read`.
+function getBridgeTokenFee(params: { network: BridgeNetwork | string; contractAddress: string; amount: string }): Promise<ToroRawResult>;
+function getBridgeBalance(params: { address: string; network: BridgeNetwork | string }): Promise<ToroRawResult>;
+function getBridgeTokenBalance(params: { address: string; network: BridgeNetwork | string; contractAddress: string; tokenName?: string }): Promise<ToroRawResult>;
+function getBridgeTransactions(params: { address: string; network: BridgeNetwork | string }): Promise<ToroRawResult>;
+function getBridgeTokenTransactions(params: { address: string; network: BridgeNetwork | string; contractAddress: string; tokenName?: string }): Promise<ToroRawResult>;
+```
+
+**Throws:** `AuthBlockedError`, `NetworkError`, `APIError`.
+
+---
+
+### Solana wrappers
+
+```ts
+// Auth gate: `wallet-create`.
+function createSolanaAddress(): Promise<ToroRawResult>;
+// Sensitive — resolves the wallet's stored password. Auth gate: `wallet-create`.
+function createToronetSolanaAddress(address: string): Promise<ToroRawResult>;
+function isValidSolanaAddress(address: string): Promise<ToroRawResult>;
+
+// Sensitive — resolve the sender's stored password. Auth gate: `solana-transfer`.
+function transferSolana(params: { from: string; to: string; amount: string }): Promise<ToroRawResult>;
+function transferSolToken(params: { from: string; to: string; amount: string; contractAddress: string; tokenName: string; useTokenAsFees?: string }): Promise<ToroRawResult>;
+
+// Reads. Auth gate: `solana-read`.
+function getSolBalance(params: { address: string; network?: BridgeNetwork | string }): Promise<ToroRawResult>;
+function getSolTokenBalance(params: { address: string; contractAddress: string; tokenName?: string; network?: BridgeNetwork | string }): Promise<ToroRawResult>;
+function getSolTransactions(params: { address: string; network?: BridgeNetwork | string }): Promise<ToroRawResult>;
+function getSolTokenTransactions(params: { address: string; contractAddress: string; tokenName?: string; network?: BridgeNetwork | string }): Promise<ToroRawResult>;
+```
+
+**Throws:** `AuthBlockedError`, `NetworkError`, `APIError`.
+
+---
+
+### Swap wrappers
+
+```ts
+// Read. Auth gate: `swap-read`. Returns a typed SwapRateOutput (from torosdk).
+function getSwapQuote(params: { fromCurrency: string; toCurrency: string; amount: number }): Promise<SwapRateOutput>;
+
+// Sensitive — resolves the `client` wallet's stored password. Auth gate: `swap`.
+function executeSwap(params: { fromCurrency: string; toCurrency: string; amount: number; client: string }): Promise<ToroRawResult>;
+```
+
+**Throws:** `AuthBlockedError`, `NetworkError`, `APIError`.
+
+---
+
 ## React Hooks
 
 > Import from `torosdk-expo`. All hooks require a `<ToronetProvider>` ancestor. Built on `@tanstack/react-query` v5.
@@ -604,6 +670,53 @@ function useExchangeRates(): UseQueryResult<Array<{ pair: string; rate: string }
 ```
 
 **Stale time:** 60 seconds
+
+---
+
+### Bridge hooks
+
+Each wraps the corresponding core wrapper. Mutations invalidate the sender's bridge balance queries on success; queries share the 30-second stale time.
+
+```ts
+// Mutation — bridge tokens cross-chain.
+function useBridgeToken(): UseMutationResult<ToroRawResult, unknown, BridgeTokenVariables>;
+
+// Queries.
+function useBridgeTokenFee(options: UseBridgeTokenFeeOptions): UseQueryResult<ToroRawResult>;
+function useBridgeBalance(options: UseBridgeBalanceOptions): UseQueryResult<ToroRawResult>;
+function useBridgeTokenBalance(options: UseBridgeTokenBalanceOptions): UseQueryResult<ToroRawResult>;
+function useBridgeTransactions(options: UseBridgeTransactionsOptions): UseQueryResult<ToroRawResult>;
+function useBridgeTokenTransactions(options: UseBridgeTokenTransactionsOptions): UseQueryResult<ToroRawResult>;
+```
+
+---
+
+### Solana hooks
+
+```ts
+// Mutations.
+function useCreateSolanaAddress(): UseMutationResult<ToroRawResult, unknown, void>;
+function useCreateToronetSolanaAddress(): UseMutationResult<ToroRawResult, unknown, string>;
+function useTransferSolana(): UseMutationResult<ToroRawResult, unknown, TransferSolanaVariables>;
+function useTransferSolToken(): UseMutationResult<ToroRawResult, unknown, TransferSolTokenVariables>;
+
+// Queries (30-second stale time).
+function useSolBalance(options: UseSolBalanceOptions): UseQueryResult<ToroRawResult>;
+function useSolTokenBalance(options: UseSolTokenBalanceOptions): UseQueryResult<ToroRawResult>;
+function useSolTransactions(options: UseSolTransactionsOptions): UseQueryResult<ToroRawResult>;
+function useSolTokenTransactions(options: UseSolTokenTransactionsOptions): UseQueryResult<ToroRawResult>;
+```
+
+`useTransferSolana` invalidates the sender's SOL balance and transactions on success; `useTransferSolToken` invalidates the sender's token balance.
+
+---
+
+### Swap hooks
+
+```ts
+function useSwapQuote(options: UseSwapQuoteOptions): UseQueryResult<SwapRateOutput>; // 15-second stale time
+function useSwap(): UseMutationResult<ToroRawResult, unknown, SwapVariables>;        // invalidates client balances
+```
 
 ---
 
@@ -1045,7 +1158,7 @@ interface ToronetConfig {
 
 ### `OperationCategory`
 
-The 9 categories used by auth gating. Each hook and SDK function declares its category.
+The 15 categories used by auth gating. Each hook and SDK function declares its category.
 
 ```ts
 type OperationCategory =
@@ -1057,7 +1170,13 @@ type OperationCategory =
   | 'exchange-rates'
   | 'wallet-create'
   | 'wallet-import'
-  | 'wallet-delete';
+  | 'wallet-delete'
+  | 'bridge'
+  | 'bridge-read'
+  | 'swap'
+  | 'swap-read'
+  | 'solana-transfer'
+  | 'solana-read';
 ```
 
 **Mapping to hooks/functions:**
@@ -1070,9 +1189,15 @@ type OperationCategory =
 | `tns-read` | `useResolveTNS`, `useLookupTNS`, `resolveTNS`, `lookupTNS` |
 | `tns-write` | `useSetTNS`, `setTNS` |
 | `exchange-rates` | `useExchangeRates`, `getExchangeRates` |
-| `wallet-create` | `useCreateWallet`, `createWallet` |
+| `wallet-create` | `useCreateWallet`, `createWallet`, `createSolanaAddress`, `createToronetSolanaAddress` |
 | `wallet-import` | `useImportWallet`, `importWallet` |
 | `wallet-delete` | `useDeleteWallet` |
+| `bridge` | `useBridgeToken`, `bridgeToken` |
+| `bridge-read` | `useBridgeTokenFee`, `useBridgeBalance`, `useBridgeTokenBalance`, `useBridgeTransactions`, `useBridgeTokenTransactions` (and core equivalents) |
+| `swap` | `useSwap`, `executeSwap` |
+| `swap-read` | `useSwapQuote`, `getSwapQuote` |
+| `solana-transfer` | `useTransferSolana`, `useTransferSolToken`, `transferSolana`, `transferSolToken` |
+| `solana-read` | `useSolBalance`, `useSolTokenBalance`, `useSolTransactions`, `useSolTokenTransactions` (and core equivalents) |
 
 ---
 

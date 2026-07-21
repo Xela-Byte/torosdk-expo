@@ -1,7 +1,38 @@
-import { Currency } from 'torosdk';
+import { Currency, BridgeNetwork } from 'torosdk';
 
 /** Re-export the `Currency` enum from `torosdk` for convenience. */
 export { Currency };
+
+/**
+ * Re-export the `BridgeNetwork` enum from `torosdk`.
+ *
+ * @remarks
+ * Identifies the external chain a cross-chain bridge operation targets:
+ * `Solana` (`'sol'`), `Base` (`'base'`), `Polygon` (`'poly'`),
+ * `BSC` (`'bsc'`), `Arbitrum` (`'arb'`), and `Ethereum` (`'eth'`).
+ */
+export { BridgeNetwork };
+
+/**
+ * Raw response envelope returned by Toronet bridge, Solana, and swap
+ * endpoints.
+ *
+ * @remarks
+ * These `torosdk` functions return loosely-typed payloads whose exact shape
+ * varies by endpoint. This interface documents the fields that are commonly
+ * present so callers can narrow without reaching for `any`. Additional
+ * endpoint-specific fields are accessible via the index signature.
+ *
+ * @property result - Whether the operation succeeded (present on most write ops).
+ * @property message - Human-readable status or error message from the API.
+ * @property txid - Transaction id / hash, when the operation produced one.
+ */
+export interface ToroRawResult {
+  result?: boolean;
+  message?: string;
+  txid?: string;
+  [key: string]: unknown;
+}
 
 /**
  * Supported Toronet network environments.
@@ -45,4 +76,10 @@ export type OperationCategory =
   | 'exchange-rates'
   | 'wallet-create'
   | 'wallet-import'
-  | 'wallet-delete';
+  | 'wallet-delete'
+  | 'bridge'
+  | 'bridge-read'
+  | 'swap'
+  | 'swap-read'
+  | 'solana-transfer'
+  | 'solana-read';
