@@ -14,6 +14,24 @@ export { Currency };
 export { BridgeNetwork };
 
 /**
+ * Optional privileged signer credentials for operations that can be
+ * authorized by an admin/relayer rather than the wallet owner alone.
+ *
+ * @remarks
+ * Several `torosdk` bridge and Solana operations accept an optional trailing
+ * admin address + password (e.g. to pay gas or authorize on a managed
+ * network). Supply this only when the target Toronet deployment requires it;
+ * omit it and the operation runs under the wallet's own stored password.
+ *
+ * @property address - The admin/relayer address.
+ * @property password - The admin/relayer password.
+ */
+export interface AdminCredentials {
+  address: string;
+  password: string;
+}
+
+/**
  * Raw response envelope returned by Toronet bridge, Solana, and swap
  * endpoints.
  *

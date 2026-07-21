@@ -3,7 +3,7 @@ import { Currency, BridgeNetwork } from 'torosdk';
 import type { SwapRateOutput } from 'torosdk';
 import { getPassword, setPassword } from './storage';
 import { getAuthStrategy } from './auth';
-import type { OperationCategory, ToroRawResult } from './types';
+import type { OperationCategory, ToroRawResult, AdminCredentials } from './types';
 import { NetworkError, APIError } from './errors';
 
 // --- Internal helpers ---
@@ -427,6 +427,8 @@ export async function getExchangeRates(): Promise<
  * @property contractAddress - The token contract address on the target chain.
  * @property tokenName - The token symbol/name being bridged.
  * @property amount - Amount to bridge, as a decimal string.
+ * @property admin - Optional privileged signer credentials, for Toronet
+ *   deployments that require an admin/relayer to authorize the bridge.
  */
 export interface BridgeTokenParams {
   from: string;
@@ -434,6 +436,7 @@ export interface BridgeTokenParams {
   contractAddress: string;
   tokenName: string;
   amount: string;
+  admin?: AdminCredentials;
 }
 
 /**
@@ -465,14 +468,19 @@ export interface BridgeTokenParams {
 export async function bridgeToken(params: BridgeTokenParams): Promise<ToroRawResult> {
   try {
     const pwd = await resolvePassword(params.from, 'bridge');
-    return await torosdk.bridgeTokenFromChain(params.network, {
-      from: params.from,
-      pwd,
-      network: params.network,
-      contractaddress: params.contractAddress,
-      tokenname: params.tokenName,
-      amount: params.amount,
-    });
+    return await torosdk.bridgeTokenFromChain(
+      params.network,
+      {
+        from: params.from,
+        pwd,
+        network: params.network,
+        contractaddress: params.contractAddress,
+        tokenname: params.tokenName,
+        amount: params.amount,
+      },
+      params.admin?.address,
+      params.admin?.password
+    );
   } catch (err) {
     wrapError(err);
   }
@@ -623,13 +631,17 @@ export async function getBridgeTokenTransactions(params: {
  * @remarks
  * Passes through the `'wallet-create'` auth gate.
  *
+ * @param admin - Optional privileged signer credentials, for Toronet
+ *   deployments that require an admin to create the address.
  * @returns The raw creation result from the Toronet API (includes the new address).
  * @throws {@link AuthBlockedError} | {@link NetworkError} | {@link APIError}
  */
-export async function createSolanaAddress(): Promise<ToroRawResult> {
+export async function createSolanaAddress(admin?: AdminCredentials): Promise<ToroRawResult> {
   try {
     await authorizeOperation('wallet-create');
-    return await torosdk.createSolanaAddress();
+    return await torosdk.createSolanaAddress(
+      admin ? { admin: admin.address, adminpwd: admin.password } : undefined
+    );
   } catch (err) {
     wrapError(err);
   }
@@ -678,7 +690,8 @@ export async function isValidSolanaAddress(address: string): Promise<ToroRawResu
  * **Sensitive** — requires auth gating (`'solana-transfer'`) AND the sender's
  * stored wallet password, resolved via {@link resolvePassword}.
  *
- * @param params - `from`, `to`, and `amount` (decimal string).
+ * @param params - `from`, `to`, `amount` (decimal string), and optional
+ *   `admin` privileged signer credentials.
  * @returns The raw transfer result from the Toronet API.
  * @throws {@link AuthBlockedError} if auth is denied or no password is stored.
  * @throws {@link NetworkError} | {@link APIError} on network failure.
@@ -687,15 +700,20 @@ export async function transferSolana(params: {
   from: string;
   to: string;
   amount: string;
+  admin?: AdminCredentials;
 }): Promise<ToroRawResult> {
   try {
     const pwd = await resolvePassword(params.from, 'solana-transfer');
-    return await torosdk.transferSolana({
-      from: params.from,
-      to: params.to,
-      amount: params.amount,
-      pwd,
-    });
+    return await torosdk.transferSolana(
+      {
+        from: params.from,
+        to: params.to,
+        amount: params.amount,
+        pwd,
+      },
+      params.admin?.address,
+      params.admin?.password
+    );
   } catch (err) {
     wrapError(err);
   }
@@ -709,7 +727,8 @@ export async function transferSolana(params: {
  * stored wallet password, resolved via {@link resolvePassword}.
  *
  * @param params - `from`, `to`, `amount`, token `contractAddress`, `tokenName`,
- *   and optional `useTokenAsFees` flag.
+ *   an optional `useTokenAsFees` flag, and optional `admin` privileged signer
+ *   credentials.
  * @returns The raw transfer result from the Toronet API.
  * @throws {@link AuthBlockedError} if auth is denied or no password is stored.
  * @throws {@link NetworkError} | {@link APIError} on network failure.
@@ -721,18 +740,23 @@ export async function transferSolToken(params: {
   contractAddress: string;
   tokenName: string;
   useTokenAsFees?: string;
+  admin?: AdminCredentials;
 }): Promise<ToroRawResult> {
   try {
     const pwd = await resolvePassword(params.from, 'solana-transfer');
-    return await torosdk.transferSolToken({
-      from: params.from,
-      to: params.to,
-      amount: params.amount,
-      pwd,
-      contractaddress: params.contractAddress,
-      tokenname: params.tokenName,
-      usetokenasfees: params.useTokenAsFees,
-    });
+    return await torosdk.transferSolToken(
+      {
+        from: params.from,
+        to: params.to,
+        amount: params.amount,
+        pwd,
+        contractaddress: params.contractAddress,
+        tokenname: params.tokenName,
+        usetokenasfees: params.useTokenAsFees,
+      },
+      params.admin?.address,
+      params.admin?.password
+    );
   } catch (err) {
     wrapError(err);
   }

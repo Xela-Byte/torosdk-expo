@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Solana coverage.** Core wrappers `createSolanaAddress`, `createToronetSolanaAddress`, `isValidSolanaAddress`, `transferSolana`, `transferSolToken`, `getSolBalance`, `getSolTokenBalance`, `getSolTransactions`, `getSolTokenTransactions`, and matching hooks (`useCreateSolanaAddress`, `useCreateToronetSolanaAddress`, `useTransferSolana`, `useTransferSolToken`, `useSolBalance`, `useSolTokenBalance`, `useSolTransactions`, `useSolTokenTransactions`).
 - **Currency swap coverage.** Core wrappers `getSwapQuote` and `executeSwap`, plus `useSwapQuote` and `useSwap` hooks.
 - New `OperationCategory` values (`bridge`, `bridge-read`, `swap`, `swap-read`, `solana-transfer`, `solana-read`) so auth strategies can gate the new operations.
+- Optional `AdminCredentials` passthrough on the sensitive write wrappers (`bridgeToken`, `transferSolana`, `transferSolToken`, `createSolanaAddress`) and their hooks, for Toronet deployments that require a privileged admin/relayer to authorize the operation. Backward-compatible: omit it and the operation runs under the wallet's own stored password exactly as before.
 - `ToroRawResult` type documenting the raw Toronet response envelope returned by bridge/Solana/swap endpoints.
 - `ToronetConfig.debug` flag to gate verbose adapter logging (off by default).
 - `CHANGELOG.md` — this file.

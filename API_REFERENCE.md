@@ -336,12 +336,15 @@ function getExchangeRates(): Promise<Array<{ pair: string; rate: string }>>;
 Move value between Toronet and external chains via `BridgeNetwork` (`Solana`, `Base`, `Polygon`, `BSC`, `Arbitrum`, `Ethereum`). All return `ToroRawResult` (the raw Toronet response envelope; narrow via its index signature).
 
 ```ts
+interface AdminCredentials { address: string; password: string }
+
 interface BridgeTokenParams {
   from: string;
   network: BridgeNetwork | string;
   contractAddress: string;
   tokenName: string;
   amount: string;
+  admin?: AdminCredentials; // optional privileged signer; omit to use the wallet's own password
 }
 
 // Sensitive — resolves the sender's stored password. Auth gate: `bridge`.

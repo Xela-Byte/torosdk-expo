@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { BridgeNetwork } from '../../core/types';
+import type { BridgeNetwork, AdminCredentials } from '../../core/types';
 import {
   createSolanaAddress,
   createToronetSolanaAddress,
@@ -20,7 +20,7 @@ import { queryKeys } from '../query-keys';
  */
 export function useCreateSolanaAddress() {
   return useMutation({
-    mutationFn: () => createSolanaAddress(),
+    mutationFn: (admin?: AdminCredentials) => createSolanaAddress(admin),
   });
 }
 
@@ -50,6 +50,7 @@ export interface TransferSolanaVariables {
   from: string;
   to: string;
   amount: string;
+  admin?: AdminCredentials;
 }
 
 /**
@@ -81,6 +82,7 @@ export interface TransferSolTokenVariables {
   contractAddress: string;
   tokenName: string;
   useTokenAsFees?: string;
+  admin?: AdminCredentials;
 }
 
 /**

@@ -96,15 +96,38 @@ describe('bridgeToken', () => {
 
     expect(mockAuthorize).toHaveBeenCalledWith('bridge');
     expect(mockGetPassword).toHaveBeenCalledWith('0xSender');
-    expect(mockBridgeTokenFromChain).toHaveBeenCalledWith(BridgeNetwork.Base, {
-      from: '0xSender',
-      pwd: 'stored-pwd',
-      network: BridgeNetwork.Base,
-      contractaddress: '0xToken',
-      tokenname: 'USDC',
-      amount: '25',
-    });
+    expect(mockBridgeTokenFromChain).toHaveBeenCalledWith(
+      BridgeNetwork.Base,
+      {
+        from: '0xSender',
+        pwd: 'stored-pwd',
+        network: BridgeNetwork.Base,
+        contractaddress: '0xToken',
+        tokenname: 'USDC',
+        amount: '25',
+      },
+      undefined,
+      undefined
+    );
     expect(res).toEqual({ result: true, txid: '0xabc' });
+  });
+
+  test('forwards admin credentials as trailing args when provided', async () => {
+    mockBridgeTokenFromChain.mockResolvedValueOnce({ result: true });
+    await bridgeToken({
+      from: '0xSender',
+      network: BridgeNetwork.Base,
+      contractAddress: '0xToken',
+      tokenName: 'USDC',
+      amount: '25',
+      admin: { address: '0xAdmin', password: 'admin-pwd' },
+    });
+    expect(mockBridgeTokenFromChain).toHaveBeenCalledWith(
+      BridgeNetwork.Base,
+      expect.objectContaining({ from: '0xSender', pwd: 'stored-pwd' }),
+      '0xAdmin',
+      'admin-pwd'
+    );
   });
 
   test('throws when no stored password exists', async () => {
@@ -167,12 +190,31 @@ describe('solana', () => {
     await transferSolana({ from: 'SoLFrom', to: 'SoLTo', amount: '1.5' });
     expect(mockAuthorize).toHaveBeenCalledWith('solana-transfer');
     expect(mockGetPassword).toHaveBeenCalledWith('SoLFrom');
-    expect(mockTransferSolana).toHaveBeenCalledWith({
+    expect(mockTransferSolana).toHaveBeenCalledWith(
+      {
+        from: 'SoLFrom',
+        to: 'SoLTo',
+        amount: '1.5',
+        pwd: 'stored-pwd',
+      },
+      undefined,
+      undefined
+    );
+  });
+
+  test('transferSolana forwards admin credentials when provided', async () => {
+    mockTransferSolana.mockResolvedValueOnce({ result: true });
+    await transferSolana({
       from: 'SoLFrom',
       to: 'SoLTo',
       amount: '1.5',
-      pwd: 'stored-pwd',
+      admin: { address: 'AdminAddr', password: 'admin-pwd' },
     });
+    expect(mockTransferSolana).toHaveBeenCalledWith(
+      expect.objectContaining({ from: 'SoLFrom', pwd: 'stored-pwd' }),
+      'AdminAddr',
+      'admin-pwd'
+    );
   });
 
   test('getSolBalance gates on solana-read', async () => {

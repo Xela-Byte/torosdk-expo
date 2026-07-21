@@ -30,7 +30,7 @@
  */
 
 // Types
-export type { ToronetConfig, ToronetNetwork, OperationCategory, ToroRawResult } from './types';
+export type { ToronetConfig, ToronetNetwork, OperationCategory, ToroRawResult, AdminCredentials } from './types';
 export { Currency, BridgeNetwork } from './types';
 
 // Errors
