@@ -1,0 +1,6 @@
+import type { ToronetConfig } from '@toroforge/react-native/core';
+
+export const config: ToronetConfig = {
+  network: (process.env.TOROSDK_NETWORK as 'testnet' | 'mainnet') ?? 'testnet',
+};
+

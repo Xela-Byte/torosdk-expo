@@ -1,0 +1,1 @@
+{"version":3,"file":"useBlockchain.js","sourceRoot":"","sources":["../../../src/react/hooks/useBlockchain.ts"],"names":[],"mappings":";;AAYA,8CAMC;AAlBD,uDAAiD;AACjD,wCAAmD;AACnD,8CAA0C;AAE1C;;;;;;;GAOG;AACH,SAAgB,iBAAiB;IAC/B,OAAO,IAAA,sBAAQ,EAAC;QACd,QAAQ,EAAE,sBAAS,CAAC,cAAc,EAAE;QACpC,OAAO,EAAE,GAAG,EAAE,CAAC,IAAA,uBAAiB,GAAE;QAClC,SAAS,EAAE,KAAM;KAClB,CAAC,CAAC;AACL,CAAC"}

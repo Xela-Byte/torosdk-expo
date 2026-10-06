@@ -1,0 +1,17 @@
+{
+  "name": "@reactforge/sdk-adapter",
+  "version": "0.1.1",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "torosdk": "^0.2.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5"
+  }
+}

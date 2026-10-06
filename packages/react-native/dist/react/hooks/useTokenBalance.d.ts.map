@@ -1,0 +1,1 @@
+{"version":3,"file":"useTokenBalance.d.ts","sourceRoot":"","sources":["../../../src/react/hooks/useTokenBalance.ts"],"names":[],"mappings":"AAIA,MAAM,WAAW,sBAAsB;IACrC,OAAO,EAAE,MAAM,CAAC;IAChB,eAAe,CAAC,EAAE,MAAM,CAAC;IACzB,OAAO,CAAC,EAAE,OAAO,CAAC;CACnB;AAED;;;;;;;;;GASG;AACH,wBAAgB,eAAe,CAAC,EAC9B,OAAO,EACP,eAAe,EACf,OAAc,GACf,EAAE,sBAAsB,iEAQxB"}

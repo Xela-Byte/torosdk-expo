@@ -1,0 +1,1 @@
+{"version":3,"file":"useStorage.d.ts","sourceRoot":"","sources":["../../../src/react/hooks/useStorage.ts"],"names":[],"mappings":"AAWA;;;;;;;GAOG;AACH,wBAAgB,gBAAgB,8FAM/B;AAID;;;;;;;GAOG;AACH,wBAAgB,iBAAiB,8FAMhC;AAID,MAAM,WAAW,mBAAmB;IAClC,OAAO,EAAE,MAAM,CAAC;IAChB,QAAQ,EAAE,MAAM,CAAC;CAClB;AAED;;;;;GAKG;AACH,wBAAgB,eAAe,+HAS9B;AAID;;;;;GAKG;AACH,wBAAgB,gBAAgB,+HAS/B"}

@@ -1,129 +1,174 @@
-# Contributing to torosdk-expo
+# Contributing to ToroForge
 
-Thank you for your interest in contributing! This guide covers local development, testing, and pull request workflows.
+Thank you for your interest in contributing to ToroForge! We believe open-source collaboration is key to building a robust decentralized ecosystem. Whether you're fixing a bug, proposing a new hook, or improving documentation, your contributions are highly valued.
 
-## Prerequisites
+---
 
-- Node.js 18+
-- npm 9+
-- An Expo project for manual testing (optional)
+## Table of Contents
 
-## Setup
+- [Code of Conduct](#code-of-conduct)
+- [How to Get Started](#how-to-get-started)
+- [Repository Structure](#repository-structure)
+- [Development Workflow](#development-workflow)
+- [Contributing to a Specific SDK](#contributing-to-a-specific-sdk)
+- [Submitting a Pull Request](#submitting-a-pull-request)
+- [Commit Message Convention](#commit-message-convention)
+
+---
+
+## Code of Conduct
+
+By participating in this project, you agree to be respectful, constructive, and inclusive. Harassment or abuse of any kind will not be tolerated. Our goal is a welcoming environment for contributors of all experience levels.
+
+---
+
+## How to Get Started
+
+### Prerequisites
+
+Ensure you have the following installed on your machine:
+
+- **Node.js** >= 18.x
+- **pnpm** >= 8.x (preferred) or npm/yarn
+- **Git**
+
+### Clone the Repository
 
 ```bash
-git clone https://github.com/nonomnonom/torosdk-expo.git
-cd torosdk-expo
-npm install
+git clone https://github.com/toroforge/reactforge.git
+cd reactforge
 ```
+
+### Install Dependencies
+
+This is a Turborepo monorepo. Install all dependencies from the root:
+
+```bash
+pnpm install
+```
+
+### Run the Documentation Dashboard Locally
+
+```bash
+pnpm dev
+```
+
+Navigate to [http://localhost:3000](http://localhost:3000) to preview the documentation and your changes live.
+
+---
+
+## Repository Structure
+
+```text
+reactforge/
+├── apps/
+│   └── dashboard/              # Next.js interactive documentation dashboard
+│       ├── app/
+│       │   ├── react-web/      # React Web SDK documentation pages
+│       │   └── react-native/   # React Native SDK documentation pages
+│       └── components/         # Shared UI components (Sidebar, Navbar, CodeBlock, etc.)
+├── packages/
+│   ├── sdk-adapter/            # Core TypeScript networking & signing logic
+│   ├── react/                  # @reactforge/react — Web Hooks SDK
+│   │   └── src/hooks/          # All useToroXxx.ts hook files live here
+│   └── react-native/           # @reactforge/react-native — Mobile Hooks SDK
+│       └── src/react/hooks/    # All useXxx.ts mobile hook files live here
+├── scratch/                    # Temporary helper scripts (not for production)
+├── CONTRIBUTING.md             # This file
+└── README.md                   # Project overview
+```
+
+---
 
 ## Development Workflow
 
-### Build
+### 1. Create a Feature Branch
+
+Always create a branch from `main`:
 
 ```bash
-npm run build
+git checkout -b feat/your-feature-name
 ```
 
-This runs `tsc` to compile TypeScript to `dist/`, then copies CLI templates. The build output is what consumers use — always build before manually testing in an example app.
+### 2. Make Your Changes
 
-### Type Check (no emit)
+- **For SDK hooks** (new or updated hooks), edit files in `packages/react/src/hooks/` or `packages/react-native/src/react/hooks/`.
+- **For documentation**, add or edit pages in `apps/dashboard/app/react-web/` or `apps/dashboard/app/react-native/`.
+- **For core networking logic**, work in `packages/sdk-adapter/src/`.
+
+### 3. Build and Lint
+
+Before submitting, ensure the project builds cleanly:
 
 ```bash
-npm run typecheck
+pnpm build
+pnpm lint
 ```
 
-Faster than a full build; catches type errors without writing `dist/`.
+---
 
-### Lint
+## Contributing to a Specific SDK
 
-```bash
-npm run lint
+### Adding a New React Web Hook
+
+1. Create your hook file in `packages/react/src/hooks/useToroYourHook.ts`.
+2. Export it from `packages/react/src/hooks/index.ts`.
+3. Add a corresponding documentation page in `apps/dashboard/app/react-web/<category>/useToroYourHook/page.tsx`.
+4. Add the link to `apps/dashboard/components/Sidebar.tsx` under the appropriate section.
+
+### Adding a New React Native Hook
+
+1. Create your hook file in `packages/react-native/src/react/hooks/useYourHook.ts`.
+2. Export it from `packages/react-native/src/react/index.ts`.
+3. Add a documentation page in `apps/dashboard/app/react-native/<category>/useYourHook/page.tsx`.
+4. Add the link to `apps/dashboard/components/SidebarRN.tsx` under the appropriate section.
+
+### Documentation Style Guide
+
+All documentation pages must follow these rules, which match the existing codebase:
+
+- **Background:** Pure black `#000000`
+- **Body text:** Zinc `#a1a1aa`
+- **Code references / accent:** Toronet Green `#16A34A`
+- **NO gradient buttons or backgrounds** — only solid accent colors
+- Use the `<PageHeader title="..." description="..." />` component for the page header
+- Use the `<TryItLab title="..." codeSnippet={...} />` component for code examples
+- Use `<CodeBlock code={...} language="tsx" />` for static code blocks
+
+---
+
+## Submitting a Pull Request
+
+1. Push your branch to GitHub:
+   ```bash
+   git push origin feat/your-feature-name
+   ```
+2. Open a Pull Request against the `main` branch.
+3. Fill out the PR template describing what you changed and why.
+4. Request a review from a maintainer.
+5. Once approved and all checks pass, your PR will be merged.
+
+---
+
+## Commit Message Convention
+
+We follow the [Conventional Commits](https://www.conventionalcommits.org/) specification:
+
+| Type | Description |
+|---|---|
+| `feat` | A new hook, feature, or documentation page |
+| `fix` | A bug fix in an SDK hook or UI component |
+| `docs` | Changes to documentation only |
+| `refactor` | Code refactoring without feature/bug changes |
+| `chore` | Build system, tooling, or dependency changes |
+
+**Examples:**
+```
+feat(react): add useToroVoting hook for on-chain governance
+fix(react-native): correct biometric prompt fallback logic
+docs(dashboard): add useExchangeRates page to react-native docs
 ```
 
-ESLint with TypeScript rules. The config is in `eslint.config.mjs`.
+---
 
-### Test
-
-```bash
-npm test
-```
-
-Jest with `ts-jest`. Tests mock the upstream `torosdk` and `react-native` modules.
-
-### Integration Tests (opt-in)
-
-```bash
-RUN_INTEGRATION=1 npm run test:integration
-```
-
-Makes real HTTP requests to `testnet.toronet.org`. Skipped by default.
-Requires network access to the Toronet testnet.
-
-### Full CI Check (run before pushing)
-
-```bash
-npm run typecheck && npm run lint && npm test && npm run build
-```
-
-## Project Structure
-
-```
-src/
-├── core/          # Zero React — types, config, errors, storage, auth, SDK wrappers, axios adapter
-│   └── index.ts   # Barrel export for torosdk-expo/core
-├── react/         # React hooks, TanStack Query provider, query key factory
-│   └── index.ts   # Barrel export for torosdk-expo
-└── cli/           # Node.js CLI bootstrap (npx torosdk-expo init)
-    ├── init.ts
-    └── templates/ # Scaffolded file templates
-```
-
-Three subpath exports in `package.json`:
-- `torosdk-expo` → React hooks + provider (`src/react/`)
-- `torosdk-expo/core` → Typed SDK wrappers, zero React (`src/core/`)
-- `torosdk-expo/cli` → Bootstrap CLI (`src/cli/`)
-
-## Testing
-
-Tests live in `__tests__/` and mirror the `src/` structure:
-
-- `__tests__/core/` — SDK wrappers, storage, auth
-- `__tests__/react/` — React hooks and provider
-- `__tests__/cli/` — CLI init logic
-
-Mocks are in `__tests__/__mocks__/` (react-native, torosdk, expo modules).
-
-### Running specific tests
-
-```bash
-npx jest __tests__/core/sdk.test.ts
-npx jest --watch  # watch mode
-```
-
-## Code Style
-
-- TypeScript strict mode
-- JSDoc on all exported functions (`@param`, `@returns`, `@throws`, `@remarks`)
-- No `any` without an explanatory comment and `eslint-disable`
-- Files are named for their responsibility (`errors.ts`, `storage.ts`)
-- Functions use verb-noun naming (`createWallet`, `getBalance`)
-- Barrel exports in `index.ts` with section comments
-
-## Commit Messages
-
-Follow the existing convention:
-- `feat:` — new feature
-- `fix:` — bug fix
-- `docs:` — documentation
-- `chore:` — maintenance, dependencies, config
-- `release:` — version bump
-
-## Pull Requests
-
-1. Run the full CI check locally: `npm run typecheck && npm run lint && npm test && npm run build`
-2. Update `CHANGELOG.md` under `[Unreleased]` with your changes
-3. Open a PR against `main` with a description of what changed and why
-
-## Questions?
-
-Open an issue on GitHub or reach out to the Toronet community.
+Thank you for contributing to ToroForge and helping build the future of decentralized mobile and web finance! 🌿

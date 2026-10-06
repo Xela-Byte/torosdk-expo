@@ -1,0 +1,1 @@
+{"version":3,"file":"useExchangeRates.js","sourceRoot":"","sources":["../../../src/react/hooks/useExchangeRates.ts"],"names":[],"mappings":";;AAkBA,4CAMC;AAxBD,uDAAiD;AACjD,wCAAkD;AAClD,8CAA0C;AAE1C;;;;;;;;;;;;;GAaG;AACH,SAAgB,gBAAgB;IAC9B,OAAO,IAAA,sBAAQ,EAAC;QACd,QAAQ,EAAE,sBAAS,CAAC,aAAa,EAAE;QACnC,OAAO,EAAE,sBAAgB;QACzB,SAAS,EAAE,KAAM;KAClB,CAAC,CAAC;AACL,CAAC"}
